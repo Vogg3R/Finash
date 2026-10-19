@@ -1,0 +1,28 @@
+appId: com.washtrack.app
+productName: WashTrack
+copyright: Copyright © 2026 WashTrack
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist
+  - dist-electron
+  - node_modules/better-sqlite3/**/*
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  signAndEditExecutable: false
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: WashTrack
+  runAfterFinish: true
