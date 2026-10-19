@@ -4,6 +4,7 @@ import { initDatabase, closeDatabase, getSqlite } from './db/index';
 import { runMigrations } from './db/migrate';
 import { registerIpcHandlers } from './ipc/index';
 import { emailService } from './services/emailService';
+import { backupService } from './services/backupService';
 
 process.env.DIST = path.join(__dirname, '../dist');
 process.env.VITE_PUBLIC = app.isPackaged
@@ -92,6 +93,12 @@ app.whenReady().then(async () => {
     setInterval(() => {
       emailService.processQueue().catch(() => {});
     }, 60000);
+
+    // FR-47: Bugünün otomatik yedeği yoksa açılışta al; uygulama gece açık kalırsa saatte bir kontrol et
+    const runDailyBackup = () =>
+      backupService.ensureDailyBackup().catch((e) => console.error('[WashTrack] Günlük otomatik yedek alınamadı:', e));
+    runDailyBackup();
+    setInterval(runDailyBackup, 60 * 60 * 1000);
   } catch (err) {
     console.error('[WashTrack] Veritabanı başlatma hatası:', err);
   }

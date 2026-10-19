@@ -2,6 +2,7 @@ import { transactionRepository, TransactionFilters } from '../repositories/trans
 import { cashSessionRepository } from '../repositories/cashSessionRepository';
 import { categoryRepository } from '../repositories/categoryRepository';
 import { auditLogRepository } from '../repositories/auditLogRepository';
+import { backupService } from './backupService';
 
 export const financeService = {
   async getCategories(tur?: 'income' | 'expense') {
@@ -95,7 +96,16 @@ export const financeService = {
       yeni_deger: JSON.stringify({ sayilan_kurus: sayilan, fark_kurus: fark }),
     });
 
+    // FR-47: Gün kapanışında otomatik yedek. Yedek hatası kasa kapanışını geri almaz.
+    let backupPath: string | null = null;
+    try {
+      backupPath = await backupService.createAutoBackup('cash_close', userId);
+    } catch (e) {
+      console.error('[WashTrack] Kasa kapanışı otomatik yedeği alınamadı:', e);
+    }
+
     return {
+      backup_path: backupPath,
       id: openSession.id,
       beklenen_kurus: beklenen,
       sayilan_kurus: sayilan,

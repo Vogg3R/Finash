@@ -11,6 +11,8 @@ build/
 test-results/
 
 # Local databases and WAL logs
+backups/
+tests/test_backups/
 *.db
 *.db-wal
 *.db-shm
