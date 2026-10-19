@@ -1,7 +1,8 @@
 # WashTrack — Proje İlerleme ve Durum Takip Dokümanı (`progress.md`)
 
 **Son Güncelleme:** 19 Ekim 2026  
-**Mevcut Aşama:** Gün 6 Tamamlandı (RC Sürüm) · Gün 7'ye Hazır  
+**Mevcut Aşama:** Gün 6 Tamamlandı (RC Sürüm) · Gün 7'ye Hazır · GitHub Senkronize Edildi  
+**GitHub Deposu:** [Vogg3R/Finash](https://github.com/Vogg3R/Finash) (`main` dalı)  
 **Test Durumu:** 37/37 Vitest Birim/Entegrasyon (✅ %100) · 19/19 Playwright E2E (✅ %100)  
 **Hedef:** Tek şubeli oto kuaför ve araç yıkama işletmesi için çevrimdışı (offline-first) Windows masaüstü takip uygulaması (v1.0).
 
@@ -110,6 +111,12 @@
   * Yanında dinamik durum rozeti (*Hazır / Kuyrukta / Gönderildi / Hata*).
   * Aynı gün mükerrer gönderimde kullanıcıya onay sorusu çıkaran koruma mekanizması.
 * **Doğrulama:** `tests/email_queue.test.ts` (6 test), `tests/e2e/day6_email_export.spec.ts` (4 test).
+
+### 🔹 Versiyon Kontrolü & GitHub Entegrasyonu (19 Ekim 2026)
+* **GitHub Deposu Bağlantısı:** [Vogg3R/Finash](https://github.com/Vogg3R/Finash) uzak reposu `origin` olarak bağlandı.
+* **Depo Temizliği:** `.gitignore` dosyası güncellenerek test koşularından artakalan `test-results/` klasörü yoksayıldı.
+* **Ana Dal ve Eşitleme:** Uzak depodaki `README.md` ile yerel çalışma dizini çakışmasız senkronize edildi, yerel `main` dalı `origin/main` upstream dalına bağlandı.
+* **İlk Dağıtım & Push:** Tüm mimari katmanları (Electron IPC, Drizzle ORM, Mantine UI bileşenleri, 37 birim/entegrasyon testi, 19 E2E test senaryosu ve PRD dokümanı) içeren 87 dosya ilk commit ile GitHub'a aktarıldı (`git push -u origin main`).
 
 ---
 
