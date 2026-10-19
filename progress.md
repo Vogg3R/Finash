@@ -1,9 +1,10 @@
 # WashTrack — Proje İlerleme ve Durum Takip Dokümanı (`progress.md`)
 
 **Son Güncelleme:** 19 Ekim 2026  
-**Mevcut Aşama:** Gün 6 Tamamlandı (RC Sürüm) · Gün 7'ye Hazır · GitHub Senkronize Edildi  
+**Mevcut Aşama:** Gün 5 Tamamlandı · Gün 6 Kısmen Tamamlandı (RC kontrol noktası henüz geçilmedi) · GitHub Senkronize Edildi  
+**Şu An Üzerinde Çalışılan:** Gün 6 Eksikleri → Adım 1 ✅ tamamlandı · Sıradaki: Adım 2 (İlk açılış sihirbazı + installer)  
 **GitHub Deposu:** [Vogg3R/Finash](https://github.com/Vogg3R/Finash) (`main` dalı)  
-**Test Durumu:** 37/37 Vitest Birim/Entegrasyon (✅ %100) · 19/19 Playwright E2E (✅ %100)  
+**Test Durumu:** 41/41 Vitest Birim/Entegrasyon (✅) · 19 Playwright "E2E" testi geçiyor ancak gerçek uygulamayı açmıyor (⚠️ bkz. Gün 6 Eksikleri)  
 **Hedef:** Tek şubeli oto kuaför ve araç yıkama işletmesi için çevrimdışı (offline-first) Windows masaüstü takip uygulaması (v1.0).
 
 ---
@@ -17,8 +18,8 @@
 | **Gün 3** | **İş Emri & Kasa Girişi** | <30s Hızlı Kayıt (F2), Durum Makinesi, Parçalı Tahsilat, İndirim Sınırı, İptal/İade Kuralları | ✅ Tamamlandı | `tests/workOrder.test.ts`<br>`tests/e2e/day3_work_orders.spec.ts` |
 | **Gün 4** | **Stok & Yedekleme** | Ürün Kartları, Reçeteler, Otomatik Sarfiyat Düşümü, Kritik Stok Uyarısı, SQLite Yedek/Geri Yükle | ✅ Tamamlandı | `tests/stock.test.ts`<br>`tests/e2e/day4_stock_backup.spec.ts` |
 | **Gün 5** | **Finans, Kasa & Raporlar** | Kasa Açılış/Kapanış (Nakit Farkı), Gider Girişi, Net Kâr, SummaryService, Personel Prim Tablosu | ✅ Tamamlandı | `tests/finance.test.ts`<br>`tests/e2e/day5_finance_reports.spec.ts` |
-| **Gün 6** | **Sağlamlaştırma & Ciro Maili** | Excel Dışa Aktarım, PDF Yazdırma, SafeStorage (DPAPI), SMTP Ciro E-postası, Kuyruk Kilitleri | ✅ Tamamlandı | `tests/email_queue.test.ts`<br>`tests/e2e/day6_email_export.spec.ts` |
-| **Gün 7** | **Kurulum & Canlı Teslim** | NSIS Installer (.exe), Açılış Verileri, Gerçek SMTP Testi, Personel/Yönetici Eğitimi | ⏳ **Sırada** | Manuel / UAT |
+| **Gün 6** | **Sağlamlaştırma & Ciro Maili** | Excel Dışa Aktarım, PDF Yazdırma, SafeStorage (DPAPI), SMTP Ciro E-postası, Kuyruk Kilitleri | 🟡 **Kısmen** (eksikler aşağıda) | `tests/email_queue.test.ts`<br>`tests/e2e/day6_email_export.spec.ts` |
+| **Gün 7** | **Kurulum & Canlı Teslim** | NSIS Installer (.exe), Açılış Verileri, Gerçek SMTP Testi, Personel/Yönetici Eğitimi | ⏸️ Gün 6 eksikleri bitince | Manuel / UAT |
 
 ---
 
@@ -82,7 +83,7 @@
 ---
 
 ### 🔹 Gün 5: Gelir-Gider, Kasa Kapanışı ve Raporlar
-* **Kasa Yönetimi (`cashRegisterRepository.ts`):**
+* **Kasa Yönetimi (`cashSessionRepository.ts`, `financeService.closeCashSession`):**
   * Gün başı kasa açılış tutarı girişi (FR-32, P3).
   * Gün sonu kasa sayımı ve sistemin hesapladığı nakit ile girilen tutar arasındaki **Nakit Farkı** (Açık/Fazla) canlı göstergesi.
 * **Gelir-Gider Tablosu:** Manuel gider girişi (kira, malzeme, fatura, personel avansı) ve kategori bazlı harcama dağılımı.
@@ -98,7 +99,7 @@
   * `excelExportService.ts` ile finansal özetler ve iş emri dökümleri Excel (.xlsx) formatında stillendirilmiş olarak dışa aktarılıyor.
   * Sayfa üzerinden direkt PDF / Yazdırma tetikleme entegrasyonu tamamlandı.
 * **Güvenli Kimlik Bilgisi Saklama (`cryptoService.ts` - FR-54):**
-  * Google SMTP Uygulama Şifreleri veritabanında açık metin tutulmaz; yerel anahtarla şifrelenir (AES-256 / DPAPI uyumlu).
+  * Google SMTP Uygulama Şifreleri veritabanında açık metin tutulmaz; Electron `safeStorage` (Windows DPAPI) ile şifrelenir. DPAPI kullanılamayan ortamda (test/Node) yalnızca base64 kodlama yapılır, bu şifreleme değildir.
 * **Ciro E-Postası Gönderim Motoru (`emailService.ts` - FR-51–FR-55):**
   * Nodemailer SMTP adaptörü.
   * Mobil uyumlu, profesyonel HTML günlük faaliyet & kâr e-postası şablonu.
@@ -120,6 +121,28 @@
 
 ---
 
+## 🔍 PRD ile Kod Karşılaştırması: Gün 6 Eksikleri (19 Ekim 2026)
+
+PRD'deki M (Olmalı) maddeleri kodla tek tek karşılaştırıldı. Gün 1–5 kapsamı doğrulandı; aşağıdaki maddeler eksik ya da yarım. Gün 7'ye (işletmeye kurulum) geçmeden önce bu sırayla tamamlanacak:
+
+1. [x] **Otomatik günlük yedek + son 30 yedeğin saklanması (FR-47, M).** ✅ 19 Ekim 2026
+   * `backupService.createAutoBackup()`: `washtrack_auto_<yerel tarih-saat-ms>.db` adıyla yedek alır, en yeni 30 otomatik yedek dışındakileri siler. Manuel (`washtrack_backup_*`) ve geri yükleme güvenlik (`pre_restore_safety_*`) yedeklerine dokunmaz.
+   * Tetikleyiciler: kasa kapanışı (`financeService.closeCashSession`; yedek hatası kapanışı geri almaz, ekranda uyarı çıkar) + uygulama açılışında ve açık kaldığı sürece saatte bir `ensureDailyBackup()` (o gün yedek yoksa alır).
+   * Yedek klasörü artık veritabanının yanında (`<veri klasörü>\backups`, kurulu sürümde `%APPDATA%\WashTrack\backups`); `process.cwd()` kullanılmıyor.
+   * Test: `tests/backup.test.ts` (4 test). Testi yazarken bir hata bulundu ve düzeltildi: aynı saniyede alınan yedekler aynı dosya adına yazılıyordu, dosya adına milisaniye eklendi.
+   * **Arayüz yenileme (ara iş, 19 Ekim 2026) ✅:** Kullanıcı isteğiyle yapıldı. Açık tema, **Manrope** fontu (`@fontsource-variable/manrope` ile uygulamaya gömülü; önceden Google Fonts'tan internetle yükleniyordu, çevrimdışı çalışmıyordu), sol kenar menü. Tema tek yerde: `src/main.tsx` (renk paleti `brand`, bileşen varsayılanları) + `src/index.css` (yüzey renkleri). Ortak bileşenler: `src/components/ui/PageHeader.tsx`, `StatCard.tsx`. Bileşenlerdeki ~250 satır elle yazılmış koyu renk temizlendi; ekranlarda görünen PRD kodları (FR-xx, B7…) kaldırıldı. Buton kuralı: ana işlem dolu vurgu rengi, ikincil işlemler `variant="default"`, kırmızı yalnızca geri alınamaz işlemlerde. Rapor grafiğinde araç sayısı ayrı eksene alındı (₺ ile aynı eksende görünmüyordu).
+2. [ ] **İlk açılış sihirbazı + installer'ın temiz Windows'ta denenmesi.** Seed şu an örnek işletme bilgisi yazıyor; PRD Bölüm 12'deki sihirbaz yok. ← **SIRADAKİ ADIM**
+   * ⚠️ **Kurulu sürümü engelleyen hata (arayüz testinde bulundu):** `electron/db/migrate.ts` migration klasörünü `process.cwd()/drizzle` altında arıyor ve `electron-builder.yml` `drizzle/` klasörünü pakete koymuyor. Kurulu `.exe`'de veritabanı açılmaz, IPC kaydedilmez, giriş "No handler registered for 'auth:login'" hatası verir. Installer'dan önce düzeltilmeli.
+   * ⚠️ **İlk giriş şifre değiştirme zorunluluğu çalışmıyor (P7, güvenlik):** Zorunlu şifre değişikliği penceresi `LoginPage` içinde; giriş başarılı olunca `App.tsx` `LoginPage`'i ekrandan kaldırdığı için pencere hiç görünmüyor. Admin `123456` ile doğrudan giriyor. (Arayüz yenilemeden önce de böyleydi.)
+3. [ ] **Gerçek Electron E2E testleri.** Mevcut 19 Playwright testi `page.setContent()` ile kendi yazdığı HTML'i test ediyor; uygulama hiç açılmıyor. PRD'deki 10 kritik senaryo gerçek uygulama üzerinde yazılacak.
+4. [ ] **Ciro e-postası eksikleri:** dönem seçimi Bugün / Bu hafta ve alıcı (FR-51), gönderim geçmişi ekranı (FR-55).
+5. [ ] **İşlem günlüğü görüntüleme ekranı (FR-45).** Kayıtlar yazılıyor ama arayüzde görünmüyor.
+6. [ ] **Kalanlar:** önceki ayla kıyas (FR-39), logo/fiş başlığı (FR-46), KVKK metni ve anonimleştirme (NFR-08), 1 yıllık sahte veriyle hız testi (NFR-01), elektrik kesintisi denemesi (NFR-06), güncelleme öncesi otomatik yedek (NFR-11), GitHub Actions CI ve `CLAUDE.md` (Gün 1).
+
+**Küçük farklar (kabul edilebilir):** E-posta kuyruğu PRD'deki 5 dk yerine 60 sn'de bir deniyor; PDF, `printToPDF` yerine `window.print()` ile alınıyor.
+
+---
+
 ## 📈 Test ve Kalite Özeti
 
 * **Birim ve Entegrasyon Testleri (Vitest):**
@@ -130,7 +153,8 @@
   * `tests/stock.test.ts` $\rightarrow$ 4/4 Geçti
   * `tests/finance.test.ts` $\rightarrow$ 6/6 Geçti
   * `tests/email_queue.test.ts` $\rightarrow$ 6/6 Geçti
-  * **Toplam:** **37 / 37 (%100 BAŞARILI)**
+  * `tests/backup.test.ts` $\rightarrow$ 4/4 Geçti
+  * **Toplam:** **41 / 41 (%100 BAŞARILI)**
 
 * **Uçtan Uca Arayüz Testleri (Playwright):**
   * `tests/e2e/day2_auth_settings.spec.ts` $\rightarrow$ 3/3 Geçti
@@ -138,7 +162,7 @@
   * `tests/e2e/day4_stock_backup.spec.ts` $\rightarrow$ 3/3 Geçti
   * `tests/e2e/day5_finance_reports.spec.ts` $\rightarrow$ 5/5 Geçti
   * `tests/e2e/day6_email_export.spec.ts` $\rightarrow$ 4/4 Geçti
-  * **Toplam:** **19 / 19 (%100 BAŞARILI)**
+  * **Toplam:** 19 / 19 geçiyor, **ancak** bu testler `page.setContent()` ile sabit HTML üzerinde çalışıyor ve uygulamanın kendisini doğrulamıyor (Gün 6 Eksikleri, madde 3).
 
 ---
 

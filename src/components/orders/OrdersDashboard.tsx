@@ -14,6 +14,7 @@ import {
   ActionIcon,
   Tooltip,
   Alert,
+  Kbd,
 } from '@mantine/core';
 import {
   IconCar,
@@ -33,10 +34,11 @@ import { NewWorkOrderModal } from './NewWorkOrderModal';
 import { PaymentModal } from './PaymentModal';
 import { CancelOrderModal } from './CancelOrderModal';
 import { CashOpenModal } from '../cash/CashOpenModal';
+import { PageHeader } from '../ui/PageHeader';
+import { StatCard } from '../ui/StatCard';
 
 export function OrdersDashboard() {
   const { user } = useAuth();
-
   const [orders, setOrders] = useState<any[]>([]);
   const [openSession, setOpenSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,7 +67,6 @@ export function OrdersDashboard() {
       setLoading(false);
     }
   }, []);
-
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -104,7 +105,6 @@ export function OrdersDashboard() {
   const completedCount = orders.filter((o) => o.durum === 'completed').length;
   const deliveredCount = orders.filter((o) => o.durum === 'delivered').length;
   const cancelledCount = orders.filter((o) => o.durum === 'cancelled').length;
-
   const totalRevenueKurus = orders
     .filter((o) => o.durum !== 'cancelled')
     .reduce((sum, o) => sum + (o.toplam_kurus - (o.indirim_kurus || 0)), 0);
@@ -114,7 +114,6 @@ export function OrdersDashboard() {
     if (activeTab === 'all') return true;
     return o.durum === activeTab;
   });
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -122,7 +121,7 @@ export function OrdersDashboard() {
       case 'washing':
         return <Badge color="cyan" variant="filled">Yıkanıyor</Badge>;
       case 'completed':
-        return <Badge color="blue" variant="filled">Tamamlandı</Badge>;
+        return <Badge color="brand" variant="filled">Tamamlandı</Badge>;
       case 'delivered':
         return <Badge color="teal" variant="filled">Teslim Edildi</Badge>;
       case 'cancelled':
@@ -131,128 +130,75 @@ export function OrdersDashboard() {
         return <Badge color="gray">{status}</Badge>;
     }
   };
-
   return (
     <Stack gap="lg">
+      <PageHeader
+        title="İş Emirleri"
+        description="Bugün işlem gören araçlar ve durumları. Yeni kayıt için F2."
+        actions={
+          <>
+            <Tooltip label="Yenile">
+              <ActionIcon variant="default" size={36} onClick={loadData} loading={loading} aria-label="Yenile">
+                <IconRefresh size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Button size="md" leftSection={<IconPlus size={18} />} onClick={() => setNewOrderModalOpened(true)}>
+              Yeni İş Emri
+              <Kbd ml={8} size="xs">F2</Kbd>
+            </Button>
+          </>
+        }
+      />
+
       {/* Kasa Durum Çubuğu */}
       {!openSession ? (
-        <Alert
-          color="yellow"
-          icon={<IconAlertTriangle size={18} />}
-          title="Kasa Oturumu Kapalı"
-          styles={{ root: { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.3)' } }}
-        >
+        <Alert color="yellow" icon={<IconAlertTriangle size={18} />} title="Kasa henüz açılmadı">
           <Group justify="space-between" align="center">
-            <Text size="sm">
-              Nakit tahsilat ve nakit iade işlemleri yapabilmek için günün kasa açılışını yapmanız gerekmektedir.
-            </Text>
-            <Button size="xs" color="yellow" variant="filled" onClick={() => setCashModalOpened(true)}>
+            <Text size="sm">Nakit tahsilat ve iade yapabilmek için günün kasa açılışını yapın.</Text>
+            <Button size="xs" color="yellow" onClick={() => setCashModalOpened(true)}>
               Kasayı Aç
             </Button>
           </Group>
         </Alert>
       ) : (
-        <Paper
-          p="xs"
-          px="md"
-          radius="md"
-          style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.3)' }}
-        >
+        <Paper px="md" py="sm" radius="md">
           <Group justify="space-between">
-            <Group gap="xs">
-              <ThemeIcon size={24} radius="xl" color="teal">
-                <IconCash size={14} />
+            <Group gap="sm">
+              <ThemeIcon size={28} radius="md" color="teal" variant="light">
+                <IconCash size={16} />
               </ThemeIcon>
-              <Text size="sm" fw={600} c="teal">
-                Kasa Oturumu Açık • Beklenen Nakit Kasa: {(openSession.beklenen_kurus / 100).toFixed(2)} ₺
+              <Text size="sm" fw={600}>
+                Kasa açık
               </Text>
+              <Badge color="teal" variant="dot" size="sm">
+                Beklenen nakit {(openSession.beklenen_kurus / 100).toFixed(2)} ₺
+              </Badge>
             </Group>
-            <Badge color="teal" variant="light">
+            <Text size="xs" c="dimmed">
               Açılış: {(openSession.acilis_kurus / 100).toFixed(2)} ₺
-            </Badge>
+            </Text>
           </Group>
         </Paper>
       )}
 
-      {/* Üst Bar: Başlık & Hızlı Yeni İş Emri Butonu (F2) */}
-      <Group justify="space-between" align="center">
-        <div>
-          <Text size="xl" fw={800} c="white">
-            İş Emirleri & Günlük Akış
-          </Text>
-          <Text size="sm" c="dimmed">
-            Bugün işlem gören araçlar ve durum takibi (Kısayol: F2 Yeni İş Emri)
-          </Text>
-        </div>
-
-        <Group gap="xs">
-          <Tooltip label="Yenile">
-            <ActionIcon variant="light" color="blue" size="lg" onClick={loadData} loading={loading}>
-              <IconRefresh size={18} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Button
-            size="md"
-            leftSection={<IconPlus size={18} />}
-            color="blue"
-            variant="gradient"
-            gradient={{ from: 'blue.6', to: 'indigo.6' }}
-            onClick={() => setNewOrderModalOpened(true)}
-            styles={{
-              root: {
-                boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
-              },
-            }}
-          >
-            Yeni İş Emri (F2)
-          </Button>
-        </Group>
-      </Group>
-
       {/* Sayaç Kartları (FR-07, FR-35) */}
-      <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing="sm">
-        <Card p="sm" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Text size="xs" c="dimmed" fw={600} tt="uppercase">Toplam Araç</Text>
-          <Text size="xl" fw={800} c="white" mt={2}>{totalCount}</Text>
-        </Card>
-
-        <Card p="sm" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Text size="xs" c="yellow" fw={600} tt="uppercase">Bekliyor</Text>
-          <Text size="xl" fw={800} c="yellow" mt={2}>{pendingCount}</Text>
-        </Card>
-
-        <Card p="sm" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Text size="xs" c="cyan" fw={600} tt="uppercase">Yıkanıyor</Text>
-          <Text size="xl" fw={800} c="cyan" mt={2}>{washingCount}</Text>
-        </Card>
-
-        <Card p="sm" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Text size="xs" c="blue" fw={600} tt="uppercase">Tamamlandı</Text>
-          <Text size="xl" fw={800} c="blue" mt={2}>{completedCount}</Text>
-        </Card>
-
-        <Card p="sm" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Text size="xs" c="teal" fw={600} tt="uppercase">Teslim Edildi</Text>
-          <Text size="xl" fw={800} c="teal" mt={2}>{deliveredCount}</Text>
-        </Card>
-
-        <Card p="sm" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Text size="xs" c="dimmed" fw={600} tt="uppercase">Toplam Ciro</Text>
-          <Text size="lg" fw={800} c="teal" mt={2}>
-            {(totalRevenueKurus / 100).toFixed(2)} ₺
-          </Text>
-        </Card>
+      <SimpleGrid cols={{ base: 2, sm: 3, lg: 6 }} spacing="md">
+        <StatCard label="Toplam Araç" value={totalCount} icon={<IconCar size={17} />} color="gray" />
+        <StatCard label="Bekliyor" value={pendingCount} icon={<IconClock size={17} />} color="yellow" />
+        <StatCard label="Yıkanıyor" value={washingCount} icon={<IconWash size={17} />} color="cyan" />
+        <StatCard label="Tamamlandı" value={completedCount} icon={<IconCheck size={17} />} color="brand" />
+        <StatCard label="Teslim Edildi" value={deliveredCount} icon={<IconReceipt2 size={17} />} color="teal" />
+        <StatCard label="Toplam Ciro" value={`${(totalRevenueKurus / 100).toFixed(2)} ₺`} icon={<IconCoins size={17} />} color="green" />
       </SimpleGrid>
 
       {/* Durum Sekmeleri & İş Emri Tablosu */}
-      <Paper p="md" radius="lg" style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)', border: '1px solid #334155' }}>
+      <Paper p="md" radius="lg">
         <Tabs value={activeTab} onChange={(val) => val && setActiveTab(val)}>
           <Tabs.List mb="md">
             <Tabs.Tab value="all">Tümü ({totalCount})</Tabs.Tab>
             <Tabs.Tab value="pending" color="yellow">Bekleyenler ({pendingCount})</Tabs.Tab>
             <Tabs.Tab value="washing" color="cyan">Yıkananlar ({washingCount})</Tabs.Tab>
-            <Tabs.Tab value="completed" color="blue">Tamamlananlar ({completedCount})</Tabs.Tab>
+            <Tabs.Tab value="completed" color="brand">Tamamlananlar ({completedCount})</Tabs.Tab>
             <Tabs.Tab value="delivered" color="teal">Teslim Edilenler ({deliveredCount})</Tabs.Tab>
             {cancelledCount > 0 && <Tabs.Tab value="cancelled" color="red">İptaller ({cancelledCount})</Tabs.Tab>}
           </Tabs.List>
@@ -264,10 +210,6 @@ export function OrdersDashboard() {
           ) : (
             <Table
               verticalSpacing="sm"
-              styles={{
-                th: { color: '#94a3b8', borderBottomColor: '#334155' },
-                td: { color: '#fff', borderBottomColor: '#1e293b' },
-              }}
             >
               <Table.Thead>
                 <Table.Tr>
@@ -285,14 +227,13 @@ export function OrdersDashboard() {
                 {filteredOrders.map((o) => {
                   const netKurus = o.toplam_kurus - (o.indirim_kurus || 0);
                   const entryTime = o.giris_zamani ? new Date(o.giris_zamani).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-';
-
                   return (
                     <Table.Tr key={o.id}>
                       <Table.Td fw={700} c="dimmed">
                         {o.no}
                       </Table.Td>
                       <Table.Td>
-                        <Badge size="lg" color="blue" variant="outline">
+                        <Badge size="lg" color="brand" variant="outline">
                           {o.plaka}
                         </Badge>
                       </Table.Td>
@@ -320,7 +261,7 @@ export function OrdersDashboard() {
                           {o.durum === 'washing' && (
                             <Button
                               size="xs"
-                              color="blue"
+                              color="brand"
                               leftSection={<IconCheck size={14} />}
                               onClick={() => handleAdvanceStatus(o.id, 'completed')}
                             >

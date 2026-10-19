@@ -17,9 +17,9 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { IconPlus, IconEdit, IconCheck, IconX, IconCoins, IconBottle } from '@tabler/icons-react';
+import { PageHeader } from '../ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { RecipeModal } from '../stock/RecipeModal';
-
 export interface ServiceItem {
   id: number;
   ad: string;
@@ -27,13 +27,11 @@ export interface ServiceItem {
   sure_dk: number;
   aktif: boolean;
 }
-
 export interface VehicleTypeItem {
   id: number;
   ad: string;
   sira: number;
 }
-
 export interface PriceMatrixItem {
   id: number;
   hizmet_id: number;
@@ -42,7 +40,6 @@ export interface PriceMatrixItem {
   serviceName: string;
   vehicleTypeName: string;
 }
-
 export const ServicesPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string | null>('services');
@@ -69,7 +66,6 @@ export const ServicesPage: React.FC = () => {
   } | null>(null);
   const [formPriceTL, setFormPriceTL] = useState<number>(0);
   const [recipeTargetService, setRecipeTargetService] = useState<ServiceItem | null>(null);
-
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -89,11 +85,9 @@ export const ServicesPage: React.FC = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchData();
   }, []);
-
   const handleOpenAddService = () => {
     setEditingService(null);
     setFormName('');
@@ -101,7 +95,6 @@ export const ServicesPage: React.FC = () => {
     setFormDuration(30);
     setModalOpened(true);
   };
-
   const handleOpenEditService = (srv: ServiceItem) => {
     setEditingService(srv);
     setFormName(srv.ad);
@@ -109,7 +102,6 @@ export const ServicesPage: React.FC = () => {
     setFormDuration(srv.sure_dk);
     setModalOpened(true);
   };
-
   const handleSaveService = async () => {
     if (!formName.trim() || !user) return;
     try {
@@ -139,7 +131,6 @@ export const ServicesPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   const handleToggleActive = async (srv: ServiceItem) => {
     if (!user) return;
     try {
@@ -153,13 +144,11 @@ export const ServicesPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   const handleOpenPriceModal = (service: ServiceItem, vType: VehicleTypeItem) => {
     const existing = priceMatrix.find(
       (m) => m.hizmet_id === service.id && m.arac_tipi_id === vType.id
     );
     const currentPriceTL = existing ? existing.fiyat_kurus / 100 : 0;
-
     setEditingPriceTarget({
       serviceId: service.id,
       vehicleTypeId: vType.id,
@@ -170,7 +159,6 @@ export const ServicesPage: React.FC = () => {
     setFormPriceTL(currentPriceTL);
     setPriceModalOpened(true);
   };
-
   const handleSavePrice = async () => {
     if (!editingPriceTarget || !user) return;
     try {
@@ -187,7 +175,6 @@ export const ServicesPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   const getPriceForCell = (serviceId: number, vehicleTypeId: number) => {
     const item = priceMatrix.find(
       (m) => m.hizmet_id === serviceId && m.arac_tipi_id === vehicleTypeId
@@ -198,29 +185,21 @@ export const ServicesPage: React.FC = () => {
       maximumFractionDigits: 2,
     }) + ' ₺';
   };
-
   return (
     <Stack gap="lg">
-      <Group justify="space-between" align="center">
-        <div>
-          <Title order={2} c="white">
-            Hizmet ve Fiyat Yönetimi
-          </Title>
-          <Text size="sm" c="dimmed">
-            Hizmet kataloğunu yönetin ve araç tipine göre dinamik fiyat listesini belirleyin (FR-15, FR-16).
-          </Text>
-        </div>
+      <Group justify="space-between" align="flex-end">
+        <PageHeader title="Hizmet ve Fiyat Yönetimi" description="Hizmet kataloğunu yönetin ve araç tipine göre dinamik fiyat listesini belirleyin." />
 
         <Button
           leftSection={<IconPlus size={16} />}
-          color="blue"
+          color="brand"
           onClick={handleOpenAddService}
         >
           Yeni Hizmet Ekle
         </Button>
       </Group>
 
-      <Tabs value={activeTab} onChange={setActiveTab} variant="pills" color="blue">
+      <Tabs value={activeTab} onChange={setActiveTab} variant="pills" color="brand">
         <Tabs.List mb="md">
           <Tabs.Tab value="services">Hizmet Kataloğu ({services.length})</Tabs.Tab>
           <Tabs.Tab value="matrix">Araç Tipi × Fiyat Matrisi</Tabs.Tab>
@@ -231,10 +210,6 @@ export const ServicesPage: React.FC = () => {
           <Paper
             p="md"
             radius="md"
-            style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
-            }}
           >
             <Table highlightOnHover verticalSpacing="sm">
               <Table.Thead>
@@ -249,14 +224,14 @@ export const ServicesPage: React.FC = () => {
               <Table.Tbody>
                 {services.length === 0 ? (
                   <Table.Tr>
-                    <Table.Td colSpan={5} style={{ textAlign: 'center', color: '#64748b' }}>
+                    <Table.Td colSpan={5} style={{ textAlign: 'center', color: 'var(--mantine-color-dimmed)' }}>
                       Henüz kayıtlı hizmet bulunmuyor. "Yeni Hizmet Ekle" butonuyla ekleyin.
                     </Table.Td>
                   </Table.Tr>
                 ) : (
                   services.map((srv) => (
                     <Table.Tr key={srv.id}>
-                      <Table.Td fw={700} c="white">
+                      <Table.Td fw={700}>
                         {srv.ad}
                       </Table.Td>
                       <Table.Td c="dimmed">{srv.aciklama || '-'}</Table.Td>
@@ -281,7 +256,7 @@ export const ServicesPage: React.FC = () => {
                           <Tooltip label="Düzenle">
                             <ActionIcon
                               variant="subtle"
-                              color="blue"
+                              color="brand"
                               onClick={() => handleOpenEditService(srv)}
                             >
                               <IconEdit size={16} />
@@ -313,8 +288,6 @@ export const ServicesPage: React.FC = () => {
             p="md"
             radius="md"
             style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
               overflowX: 'auto',
             }}
           >
@@ -334,7 +307,7 @@ export const ServicesPage: React.FC = () => {
                   .filter((s) => s.aktif)
                   .map((srv) => (
                     <Table.Tr key={srv.id}>
-                      <Table.Td fw={700} c="white">
+                      <Table.Td fw={700}>
                         {srv.ad}
                       </Table.Td>
                       {vehicleTypes.map((vt) => {
@@ -396,7 +369,7 @@ export const ServicesPage: React.FC = () => {
             <Button variant="subtle" color="gray" onClick={() => setModalOpened(false)}>
               İptal
             </Button>
-            <Button color="blue" onClick={handleSaveService}>
+            <Button color="brand" onClick={handleSaveService}>
               {editingService ? 'Güncelle' : 'Kaydet'}
             </Button>
           </Group>
@@ -412,8 +385,8 @@ export const ServicesPage: React.FC = () => {
       >
         <Stack gap="md">
           {editingPriceTarget && (
-            <Paper p="sm" radius="md" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)' }}>
-              <Text size="sm" fw={600} c="white">
+            <Paper p="sm" radius="md">
+              <Text size="sm" fw={600}>
                 Hizmet: {editingPriceTarget.serviceName}
               </Text>
               <Text size="xs" c="dimmed">
@@ -440,7 +413,7 @@ export const ServicesPage: React.FC = () => {
             <Button variant="subtle" color="gray" onClick={() => setPriceModalOpened(false)}>
               İptal
             </Button>
-            <Button color="teal" onClick={handleSavePrice}>
+            <Button onClick={handleSavePrice}>
               Fiyatı Kaydet
             </Button>
           </Group>

@@ -21,7 +21,6 @@ import {
   IconCash,
 } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
-
 interface PaymentModalProps {
   opened: boolean;
   order: any | null;
@@ -29,7 +28,6 @@ interface PaymentModalProps {
   onSuccess: () => void;
   onOpenCashModal: () => void;
 }
-
 export function PaymentModal({ opened, order, onClose, onSuccess, onOpenCashModal }: PaymentModalProps) {
   const { user } = useAuth();
   const [method, setMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
@@ -37,7 +35,6 @@ export function PaymentModal({ opened, order, onClose, onSuccess, onOpenCashModa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasOpenCash, setHasOpenCash] = useState(false);
-
   useEffect(() => {
     if (!opened || !order) return;
     setError(null);
@@ -55,32 +52,24 @@ export function PaymentModal({ opened, order, onClose, onSuccess, onOpenCashModa
     const remainingKurus = Math.max(0, totalKurus - paidKurus);
     setAmountTl((remainingKurus / 100).toFixed(2));
   }, [opened, order]);
-
   if (!order) return null;
-
   const totalKurus = order.toplam_kurus - (order.indirim_kurus || 0);
   const paidKurus = (order.payments || []).reduce((sum: number, p: any) => sum + p.tutar_kurus, 0);
   const remainingKurus = Math.max(0, totalKurus - paidKurus);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     const val = parseFloat(amountTl);
     if (isNaN(val) || val <= 0) {
       setError('Lütfen geçerli bir tahsilat tutarı girin.');
       return;
     }
-
     const amountKurus = Math.round(val * 100);
-
     if (method === 'cash' && !hasOpenCash) {
       setError('Nakit tahsilat yapılabilmesi için açık bir kasa oturumu olmalıdır. Lütfen önce kasayı açın.');
       return;
     }
-
     setLoading(true);
-
     try {
       if (window.electronAPI) {
         await window.electronAPI.invoke('orders:addPayment', {
@@ -98,7 +87,6 @@ export function PaymentModal({ opened, order, onClose, onSuccess, onOpenCashModa
       setLoading(false);
     }
   };
-
   return (
     <Modal
       opened={opened}
@@ -111,20 +99,16 @@ export function PaymentModal({ opened, order, onClose, onSuccess, onOpenCashModa
           <Text fw={700}>Tahsilat Al • {order.no}</Text>
         </Group>
       }
-      styles={{
-        content: { backgroundColor: '#0f172a', border: '1px solid rgba(51, 65, 85, 0.6)' },
-        header: { backgroundColor: '#0f172a', borderBottom: '1px solid rgba(51, 65, 85, 0.4)' },
-      }}
       centered
     >
       <form onSubmit={handleSubmit}>
         <Stack gap="md">
           {/* Sipariş Özeti */}
-          <Paper p="sm" radius="md" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', border: '1px solid #334155' }}>
+          <Paper p="sm" radius="md">
             <Group justify="space-between">
               <div>
                 <Text size="xs" c="dimmed">Plaka</Text>
-                <Badge color="blue" size="md">{order.vehicle?.plaka || order.plaka}</Badge>
+                <Badge color="brand" size="md">{order.vehicle?.plaka || order.plaka}</Badge>
               </div>
               <div>
                 <Text size="xs" c="dimmed">Toplam</Text>
@@ -171,10 +155,6 @@ export function PaymentModal({ opened, order, onClose, onSuccess, onOpenCashModa
                 { label: 'Havale/EFT', value: 'transfer' },
               ]}
               fullWidth
-              styles={{
-                root: { backgroundColor: '#1e293b' },
-                label: { color: '#fff' },
-              }}
             />
           </div>
 
@@ -189,7 +169,7 @@ export function PaymentModal({ opened, order, onClose, onSuccess, onOpenCashModa
             required
             autoFocus
             styles={{
-              input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff', fontSize: 18, fontWeight: 700 },
+              input: { fontSize: 18, fontWeight: 700 },
             }}
           />
 
@@ -199,7 +179,6 @@ export function PaymentModal({ opened, order, onClose, onSuccess, onOpenCashModa
             </Button>
             <Button
               type="submit"
-              color="teal"
               loading={loading}
               leftSection={<IconCheck size={16} />}
               disabled={method === 'cash' && !hasOpenCash}

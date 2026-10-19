@@ -35,7 +35,7 @@ import {
   IconSend,
 } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
-
+import { PageHeader } from '../ui/PageHeader';
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string | null>('business');
@@ -78,7 +78,6 @@ export const SettingsPage: React.FC = () => {
   const [testSending, setTestSending] = useState(false);
   const [testMessage, setTestMessage] = useState<string | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
-
   const handleCreateBackup = async () => {
     if (!user || !window.electronAPI) return;
     setBackupLoading(true);
@@ -95,7 +94,6 @@ export const SettingsPage: React.FC = () => {
       setBackupLoading(false);
     }
   };
-
   const handleRestoreBackup = async () => {
     if (!user || !window.electronAPI || !restorePath.trim()) return;
     if (!confirm('DİKKAT: Veritabanı geri yüklenmeden önce mevcut canlı verilerin otomatik güvenlik yedeği alınacaktır. Onaylıyor musunuz?')) {
@@ -119,7 +117,6 @@ export const SettingsPage: React.FC = () => {
       setBackupLoading(false);
     }
   };
-
   const fetchData = async () => {
     try {
       if (window.electronAPI) {
@@ -129,17 +126,14 @@ export const SettingsPage: React.FC = () => {
           window.electronAPI.invoke('staff:getAll'),
           window.electronAPI.invoke('email:getConfig'),
         ]);
-
         if (settingsRes) {
           setBusinessName(settingsRes.isletme_adi || '');
           setBusinessAddress(settingsRes.isletme_adresi || '');
           setBusinessPhone(settingsRes.isletme_telefon || '');
           setDiscountLimit(Number(settingsRes.indirim_ust_limit) || 10);
         }
-
         if (usersRes) setUsersList(usersRes);
         if (staffRes) setStaffList(staffRes);
-
         if (emailConfig) {
           setSmtpHost(emailConfig.host || 'smtp.gmail.com');
           setSmtpPort(emailConfig.port || 587);
@@ -152,7 +146,6 @@ export const SettingsPage: React.FC = () => {
       console.error(err);
     }
   };
-
   const handleSaveSmtp = async () => {
     if (!user || !window.electronAPI) return;
     try {
@@ -174,7 +167,6 @@ export const SettingsPage: React.FC = () => {
       alert(err.message || 'SMTP ayarları kaydedilemedi.');
     }
   };
-
   const handleSendTestEmail = async () => {
     if (!user || !window.electronAPI) return;
     setTestSending(true);
@@ -193,7 +185,6 @@ export const SettingsPage: React.FC = () => {
           recipient: smtpRecipient,
         },
       });
-
       const res = await window.electronAPI.invoke('email:sendTest', {
         userId: user.id,
         testRecipient: smtpRecipient,
@@ -207,11 +198,9 @@ export const SettingsPage: React.FC = () => {
       setTestSending(false);
     }
   };
-
   useEffect(() => {
     fetchData();
   }, []);
-
   const handleSaveBusiness = async () => {
     if (!user) return;
     try {
@@ -230,7 +219,6 @@ export const SettingsPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   const handleCreateUser = async () => {
     if (!user || !newUsername || !newPassword) return;
     try {
@@ -250,7 +238,6 @@ export const SettingsPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   const handleToggleUserActive = async (targetUser: any) => {
     if (!user) return;
     if (targetUser.kullanici_adi === 'admin') {
@@ -268,7 +255,6 @@ export const SettingsPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   const handleCreateStaff = async () => {
     if (!user || !staffName) return;
     try {
@@ -288,7 +274,6 @@ export const SettingsPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   const handleToggleStaffActive = async (st: any) => {
     if (!user) return;
     try {
@@ -302,34 +287,29 @@ export const SettingsPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   return (
     <Stack gap="lg">
-      <div>
-        <Title order={2} c="white">
-          Sistem ve İşletme Ayarları
-        </Title>
-        <Text size="sm" c="dimmed">
-          İşletme kimliği, kullanıcı yetkileri ve personel prim oranları (FR-42, FR-44, FR-46).
-        </Text>
-      </div>
+      <PageHeader
+        title="Ayarlar"
+        description="İşletme bilgileri, kullanıcılar, personel, yedekleme ve e-posta ayarları."
+      />
 
-      <Tabs value={activeTab} onChange={setActiveTab} variant="pills" color="blue">
+      <Tabs value={activeTab} onChange={setActiveTab} variant="pills" color="brand">
         <Tabs.List mb="md">
           <Tabs.Tab value="business" leftSection={<IconBuildingStore size={16} />}>
-            İşletme Bilgileri (FR-46)
+            İşletme Bilgileri
           </Tabs.Tab>
           <Tabs.Tab value="users" leftSection={<IconUsers size={16} />}>
-            Kullanıcı Hesapları (FR-42, FR-43)
+            Kullanıcı Hesapları
           </Tabs.Tab>
           <Tabs.Tab value="staff" leftSection={<IconUserPlus size={16} />}>
-            Yıkama Personeli Kartları (FR-44)
+            Yıkama Personeli Kartları
           </Tabs.Tab>
           <Tabs.Tab value="backup" leftSection={<IconDatabase size={16} />}>
-            Yedekleme & Geri Yükleme (FR-47, FR-48, B7)
+            Yedekleme & Geri Yükleme
           </Tabs.Tab>
           <Tabs.Tab value="smtp" leftSection={<IconMail size={16} />}>
-            Ciro E-Postası (FR-54)
+            Ciro E-Postası
           </Tabs.Tab>
         </Tabs.List>
 
@@ -339,8 +319,6 @@ export const SettingsPage: React.FC = () => {
             p="xl"
             radius="md"
             style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
               maxWidth: 680,
             }}
           >
@@ -375,7 +353,7 @@ export const SettingsPage: React.FC = () => {
 
               <NumberInput
                 label="Kasa İndirim Üst Limiti (%)"
-                description="Kasa rolünün Yönetici onayı olmadan uygulayabileceği maksimum indirim yüzdesi (Varsayılan %10 - B5 kuralı)."
+                description="Kasa rolünün Yönetici onayı olmadan uygulayabileceği maksimum indirim yüzdesi (varsayılan %10)."
                 value={discountLimit}
                 onChange={(val) => setDiscountLimit(Number(val) || 10)}
                 min={0}
@@ -384,7 +362,7 @@ export const SettingsPage: React.FC = () => {
               />
 
               <Group justify="flex-end" mt="md">
-                <Button color="blue" onClick={handleSaveBusiness}>
+                <Button color="brand" onClick={handleSaveBusiness}>
                   Bilgileri Kaydet
                 </Button>
               </Group>
@@ -397,16 +375,12 @@ export const SettingsPage: React.FC = () => {
           <Paper
             p="md"
             radius="md"
-            style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
-            }}
           >
             <Group justify="space-between" mb="md">
-              <Text fw={700} size="md" c="white">
+              <Text fw={700} size="md">
                 Sisteme Giriş Yapan Kullanıcılar
               </Text>
-              <Button size="xs" color="blue" leftSection={<IconPlus size={14} />} onClick={() => setAddUserOpened(true)}>
+              <Button size="xs" color="brand" leftSection={<IconPlus size={14} />} onClick={() => setAddUserOpened(true)}>
                 Yeni Kullanıcı Ekle
               </Button>
             </Group>
@@ -424,7 +398,7 @@ export const SettingsPage: React.FC = () => {
               <Table.Tbody>
                 {usersList.map((u) => (
                   <Table.Tr key={u.id}>
-                    <Table.Td fw={700} c="white">
+                    <Table.Td fw={700}>
                       {u.kullanici_adi}
                     </Table.Td>
                     <Table.Td>
@@ -443,7 +417,7 @@ export const SettingsPage: React.FC = () => {
                     <Table.Td>
                       {u.ilkgiris_sifre_degistir ? (
                         <Badge color="yellow" size="xs">
-                          Zorunlu Değişim (P7)
+                          Zorunlu Değişim
                         </Badge>
                       ) : (
                         <Text size="xs" c="dimmed">
@@ -476,16 +450,12 @@ export const SettingsPage: React.FC = () => {
           <Paper
             p="md"
             radius="md"
-            style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
-            }}
           >
             <Group justify="space-between" mb="md">
-              <Text fw={700} size="md" c="white">
-                Yıkama Personeli Kartları (FR-44)
+              <Text fw={700} size="md">
+                Yıkama Personeli Kartları
               </Text>
-              <Button size="xs" color="blue" leftSection={<IconPlus size={14} />} onClick={() => setAddStaffOpened(true)}>
+              <Button size="xs" color="brand" leftSection={<IconPlus size={14} />} onClick={() => setAddStaffOpened(true)}>
                 Yeni Personel Ekle
               </Button>
             </Group>
@@ -503,14 +473,14 @@ export const SettingsPage: React.FC = () => {
               <Table.Tbody>
                 {staffList.length === 0 ? (
                   <Table.Tr>
-                    <Table.Td colSpan={5} style={{ textAlign: 'center', color: '#64748b' }}>
+                    <Table.Td colSpan={5} style={{ textAlign: 'center', color: 'var(--mantine-color-dimmed)' }}>
                       Henüz personel kartı tanımlanmamış. "Yeni Personel Ekle" butonuyla ekleyin.
                     </Table.Td>
                   </Table.Tr>
                 ) : (
                   staffList.map((st) => (
                     <Table.Tr key={st.id}>
-                      <Table.Td fw={700} c="white">
+                      <Table.Td fw={700}>
                         {st.ad}
                       </Table.Td>
                       <Table.Td>{st.telefon || '-'}</Table.Td>
@@ -545,18 +515,16 @@ export const SettingsPage: React.FC = () => {
             p="xl"
             radius="md"
             style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
               maxWidth: 720,
             }}
           >
             <Stack gap="lg">
               <div>
-                <Title order={3} c="white">
+                <Title order={3}>
                   Veritabanı Yedekleme ve Geri Yükleme
                 </Title>
                 <Text size="sm" c="dimmed">
-                  SQLite WAL moduna tam uyumlu atomik (.backup() API) yedekleme altyapısı (B7).
+                  SQLite WAL moduna tam uyumlu atomik (.backup() API) yedekleme altyapısı.
                 </Text>
               </div>
 
@@ -573,16 +541,15 @@ export const SettingsPage: React.FC = () => {
               )}
 
               {/* Yedek Al Bölümü */}
-              <Paper p="md" radius="md" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', border: '1px solid #334155' }}>
+              <Paper p="md" radius="md">
                 <Group justify="space-between" align="center">
                   <div>
-                    <Text fw={700} c="white">1. Veritabanı Yedeği Al (FR-47)</Text>
+                    <Text fw={700}>1. Veritabanı Yedeği Al</Text>
                     <Text size="xs" c="dimmed">
                       Aktif veritabanını çalışan sistemi durdurmadan atomik olarak yedekler.
                     </Text>
                   </div>
                   <Button
-                    color="teal"
                     leftSection={<IconDownload size={16} />}
                     loading={backupLoading}
                     onClick={handleCreateBackup}
@@ -593,10 +560,10 @@ export const SettingsPage: React.FC = () => {
               </Paper>
 
               {/* Geri Yükle Bölümü */}
-              <Paper p="md" radius="md" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', border: '1px solid #334155' }}>
+              <Paper p="md" radius="md">
                 <Stack gap="sm">
                   <div>
-                    <Text fw={700} c="white">2. Yedekten Geri Yükle (Restore - FR-48, B7, AC-12)</Text>
+                    <Text fw={700}>2. Yedekten Geri Yükle</Text>
                     <Text size="xs" c="dimmed">
                       Harici USB veya yerel diskteki bir .db dosyasından geri yükler. Geri yükleme öncesinde mevcut canlı veritabanının otomatik güvenlik yedeği alınır.
                     </Text>
@@ -607,7 +574,6 @@ export const SettingsPage: React.FC = () => {
                     placeholder="Örn: C:\WashTrack_Backups\washtrack_backup.db"
                     value={restorePath}
                     onChange={(e) => setRestorePath(e.currentTarget.value)}
-                    styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
                   />
 
                   <Group justify="flex-end">
@@ -634,16 +600,14 @@ export const SettingsPage: React.FC = () => {
             p="xl"
             radius="md"
             style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
               maxWidth: 680,
             }}
           >
             <Stack gap="md">
               <div>
-                <Title order={4} c="white">Ciro E-Postası ve SMTP Yapılandırması</Title>
+                <Title order={4}>Ciro E-Postası ve SMTP Yapılandırması</Title>
                 <Text size="xs" c="dimmed">
-                  Gün sonu ciro özetinin patronun e-posta adresine iletilmesi için SMTP ayarları (FR-51–55).
+                  Gün sonu ciro özetinin patronun e-posta adresine iletilmesi için SMTP ayarları.
                 </Text>
               </div>
 
@@ -702,7 +666,7 @@ export const SettingsPage: React.FC = () => {
 
               <PasswordInput
                 label="Gönderici E-Posta Şifresi (Uygulama Şifresi)"
-                description="Güvenlik: Şifre Windows DPAPI (Electron safeStorage) ile şifrelenerek saklanır (FR-54)."
+                description="Güvenlik: Şifre Windows DPAPI (Electron safeStorage) ile şifrelenerek saklanır."
                 placeholder={smtpUser ? 'Yeni şifre girmek için yazın...' : 'Şifre'}
                 value={smtpPassword}
                 onChange={(e) => setSmtpPassword(e.target.value)}
@@ -719,8 +683,7 @@ export const SettingsPage: React.FC = () => {
 
               <Group justify="space-between" mt="md">
                 <Button
-                  variant="light"
-                  color="cyan"
+                  variant="default"
                   leftSection={<IconSend size={16} />}
                   loading={testSending}
                   disabled={!smtpUser || !smtpRecipient}
@@ -729,7 +692,7 @@ export const SettingsPage: React.FC = () => {
                   Test E-Postası Gönder
                 </Button>
 
-                <Button color="blue" onClick={handleSaveSmtp}>
+                <Button color="brand" onClick={handleSaveSmtp}>
                   Ayarları Kaydet
                 </Button>
               </Group>
@@ -767,7 +730,7 @@ export const SettingsPage: React.FC = () => {
             <Button variant="subtle" color="gray" onClick={() => setAddUserOpened(false)}>
               İptal
             </Button>
-            <Button color="blue" onClick={handleCreateUser}>
+            <Button color="brand" onClick={handleCreateUser}>
               Kullanıcıyı Kaydet
             </Button>
           </Group>
@@ -801,7 +764,7 @@ export const SettingsPage: React.FC = () => {
             <Button variant="subtle" color="gray" onClick={() => setAddStaffOpened(false)}>
               İptal
             </Button>
-            <Button color="blue" onClick={handleCreateStaff}>
+            <Button color="brand" onClick={handleCreateStaff}>
               Personeli Kaydet
             </Button>
           </Group>

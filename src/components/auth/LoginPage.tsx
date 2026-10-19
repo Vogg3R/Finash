@@ -15,7 +15,6 @@ import {
 } from '@mantine/core';
 import { IconCar, IconAlertCircle, IconLock, IconShieldCheck, IconUser } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
-
 export const LoginPage: React.FC = () => {
   const { login, changePassword, user } = useAuth();
   const [selectedUser, setSelectedUser] = useState<string>('admin');
@@ -27,25 +26,20 @@ export const LoginPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [changePassError, setChangePassError] = useState<string | null>(null);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
       setError('Lütfen şifre veya PIN giriniz.');
       return;
     }
-
     setLoading(true);
     setError(null);
-
     const res = await login(selectedUser, password);
     setLoading(false);
-
     if (!res.success) {
       setError(res.error || 'Giriş yapılamadı.');
     }
   };
-
   const handleChangePassword = async () => {
     if (newPassword.length < 4) {
       setChangePassError('Şifre en az 4 haneli/karakterli olmalıdır.');
@@ -55,17 +49,14 @@ export const LoginPage: React.FC = () => {
       setChangePassError('Yeni şifreler eşleşmiyor.');
       return;
     }
-
     setLoading(true);
     setChangePassError(null);
     const res = await changePassword(newPassword);
     setLoading(false);
-
     if (!res.success) {
       setChangePassError(res.error || 'Şifre değiştirilemedi.');
     }
   };
-
   return (
     <div
       style={{
@@ -73,32 +64,21 @@ export const LoginPage: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#070b13',
-        backgroundImage: 'radial-gradient(ellipse at 50% 20%, rgba(30, 58, 138, 0.25) 0%, transparent 70%)',
+        backgroundColor: 'var(--app-bg)',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, var(--mantine-color-brand-0) 0%, transparent 70%)',
         padding: 20,
       }}
     >
-      <Paper
-        p={36}
-        radius="lg"
-        style={{
-          width: '100%',
-          maxWidth: 440,
-          backgroundColor: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(51, 65, 85, 0.45)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.65)',
-        }}
-      >
-        <Stack align="center" gap="xs" mb="lg">
-          <ThemeIcon size={54} radius="xl" variant="gradient" gradient={{ from: 'blue.6', to: 'cyan.5' }}>
-            <IconCar size={32} />
+      <Paper p={40} radius="xl" shadow="lg" style={{ width: '100%', maxWidth: 420 }}>
+        <Stack align="center" gap={6} mb={28}>
+          <ThemeIcon size={52} radius="lg" mb={8}>
+            <IconCar size={28} />
           </ThemeIcon>
-          <Title order={2} c="white" fw={800} style={{ letterSpacing: '-0.02em' }}>
-            WashTrack
+          <Title order={2} fz={26} fw={800}>
+            WashTrack'e hoş geldiniz
           </Title>
           <Text size="sm" c="dimmed">
-            Oto Kuaför ve Araç Yıkama Takip Sistemi
+            Devam etmek için giriş yapın
           </Text>
         </Stack>
 
@@ -111,8 +91,8 @@ export const LoginPage: React.FC = () => {
             )}
 
             <div>
-              <Text size="xs" fw={600} c="dimmed" mb={6} tt="uppercase">
-                Kullanıcı Seçimi
+              <Text fz="md" fw={500} mb={4}>
+                Kullanıcı
               </Text>
               <SegmentedControl
                 fullWidth
@@ -123,10 +103,11 @@ export const LoginPage: React.FC = () => {
                   setError(null);
                 }}
                 data={[
-                  { label: 'Yönetici (admin)', value: 'admin' },
-                  { label: 'Kasa / Resepsiyon', value: 'kasa' },
+                  { label: 'Yönetici', value: 'admin' },
+                  { label: 'Kasa', value: 'kasa' },
                 ]}
-                color="blue"
+                size="md"
+                radius="md"
               />
             </div>
 
@@ -145,21 +126,14 @@ export const LoginPage: React.FC = () => {
               fullWidth
               size="md"
               loading={loading}
-              variant="gradient"
-              gradient={{ from: 'blue.6', to: 'indigo.6' }}
-              styles={{
-                root: {
-                  boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
-                },
-              }}
             >
               Giriş Yap
             </Button>
 
             <Group justify="center" gap={6} mt="xs">
-              <IconShieldCheck size={14} color="#64748b" />
+              <IconShieldCheck size={14} color="var(--mantine-color-dimmed)" />
               <Text size="xs" c="dimmed">
-                Tamamen yerel ve güvenli çevrimdışı erişim
+                Verileriniz yalnızca bu bilgisayarda saklanır
               </Text>
             </Group>
           </Stack>
@@ -182,12 +156,6 @@ export const LoginPage: React.FC = () => {
           </Group>
         }
         centered
-        styles={{
-          content: {
-            backgroundColor: '#0f172a',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
-          },
-        }}
       >
         <Stack gap="md">
           <Text size="sm" c="dimmed">
@@ -214,7 +182,7 @@ export const LoginPage: React.FC = () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
 
-          <Button fullWidth color="blue" onClick={handleChangePassword} loading={loading}>
+          <Button fullWidth color="brand" onClick={handleChangePassword} loading={loading}>
             Şifreyi Güncelle ve Başla
           </Button>
         </Stack>

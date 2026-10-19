@@ -1,34 +1,28 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   AppShell,
-  Group,
-  Text,
-  Badge,
+  Avatar,
+  Box,
   Button,
-  Card,
-  SimpleGrid,
-  ThemeIcon,
+  Group,
+  NavLink,
   Stack,
-  Paper,
+  Text,
+  ThemeIcon,
   Tooltip,
+  ActionIcon,
 } from '@mantine/core';
 import {
   IconCar,
   IconCoins,
-  IconClock,
-  IconAlertTriangle,
   IconMail,
-  IconDatabase,
-  IconCheck,
-  IconPlus,
-  IconShieldCheck,
-  IconSparkles,
   IconUsers,
   IconSettings,
   IconLayoutDashboard,
   IconLogout,
   IconWash,
   IconPackage,
+  IconChartBar,
 } from '@tabler/icons-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './components/auth/LoginPage';
@@ -40,17 +34,24 @@ import { OrdersDashboard } from './components/orders/OrdersDashboard';
 import { StockPage } from './components/stock/StockPage';
 import { FinancePage } from './components/finance/FinancePage';
 import { ReportsPage } from './components/reports/ReportsPage';
-import { IconChartBar } from '@tabler/icons-react';
+
+type NavKey = 'dashboard' | 'customers' | 'services' | 'stock' | 'finance' | 'reports' | 'settings';
+
+type AccessModule = Parameters<ReturnType<typeof useAuth>['canAccess']>[0];
+
+const NAV_ITEMS: { key: NavKey; label: string; icon: React.ReactNode; access?: AccessModule }[] = [
+  { key: 'dashboard', label: 'İş Emirleri', icon: <IconLayoutDashboard size={19} stroke={1.7} /> },
+  { key: 'customers', label: 'Müşteri & Araç', icon: <IconUsers size={19} stroke={1.7} /> },
+  { key: 'services', label: 'Hizmet & Fiyat', icon: <IconWash size={19} stroke={1.7} />, access: 'services' },
+  { key: 'stock', label: 'Stok', icon: <IconPackage size={19} stroke={1.7} /> },
+  { key: 'finance', label: 'Finans & Kasa', icon: <IconCoins size={19} stroke={1.7} />, access: 'finance' },
+  { key: 'reports', label: 'Raporlar', icon: <IconChartBar size={19} stroke={1.7} />, access: 'reports' },
+  { key: 'settings', label: 'Ayarlar', icon: <IconSettings size={19} stroke={1.7} />, access: 'settings' },
+];
 
 function MainLayout() {
   const { user, isAuthenticated, logout, canAccess } = useAuth();
-  const [currentNav, setCurrentNav] = useState<'dashboard' | 'customers' | 'services' | 'stock' | 'finance' | 'reports' | 'settings'>('dashboard');
-
-  const [dbStatus, setDbStatus] = useState<{
-    status: string;
-    journalMode?: string;
-    tableCount?: number;
-  }>({ status: 'connected', journalMode: 'wal', tableCount: 20 });
+  const [currentNav, setCurrentNav] = useState<NavKey>('dashboard');
   const [appVersion, setAppVersion] = useState<string>('1.0.0');
 
   const [queueStatus, setQueueStatus] = useState<any>({ todaySent: false, pendingCount: 0, failedCount: 0 });
@@ -66,10 +67,6 @@ function MainLayout() {
 
   useEffect(() => {
     if (window.electronAPI) {
-      window.electronAPI.invoke('db:status').then((res) => {
-        if (res) setDbStatus(res);
-      }).catch(() => {});
-
       window.electronAPI.getAppVersion().then((v) => {
         if (v) setAppVersion(v);
       }).catch(() => {});
@@ -105,214 +102,118 @@ function MainLayout() {
     return <LoginPage />;
   }
 
+  // FR-55: buton yanındaki durum göstergesi
+  const mailState = queueStatus.todaySent
+    ? { color: 'teal', label: 'Bugün gönderildi' }
+    : queueStatus.failedCount > 0
+    ? { color: 'red', label: 'Gönderilemedi' }
+    : queueStatus.pendingCount > 0
+    ? { color: 'yellow', label: 'Kuyrukta bekliyor' }
+    : { color: 'gray', label: 'Henüz gönderilmedi' };
+
+  const roleLabel = user?.rol === 'admin' ? 'Yönetici' : user?.rol === 'cashier' ? 'Kasa' : 'Personel';
+
   return (
     <>
       <InactivityLockOverlay />
 
-      <AppShell
-        header={{ height: 106 }}
-        padding="md"
-        styles={{
-          main: {
-            backgroundColor: '#070b13',
-            minHeight: '100vh',
-          },
-        }}
-      >
-        <AppShell.Header
-          style={{
-            backgroundColor: 'rgba(11, 15, 25, 0.98)',
-            backdropFilter: 'blur(16px)',
-            borderBottom: '1px solid rgba(51, 65, 85, 0.4)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
+      <AppShell navbar={{ width: 248, breakpoint: 0 }} padding={0}>
+        <AppShell.Navbar
+          p="md"
+          style={{ backgroundColor: 'var(--app-sidebar-bg)', borderRight: '1px solid var(--app-border)' }}
         >
-          {/* 1. Üst Katman: Logo, Ciro Gönder ve Kullanıcı / Sistem Bilgisi (54px) */}
-          <div
-            style={{
-              height: 54,
-              borderBottom: '1px solid rgba(51, 65, 85, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0 20px',
-            }}
-          >
-            <Group gap="md">
-              <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => setCurrentNav('dashboard')}>
-                <ThemeIcon size={34} radius="md" variant="gradient" gradient={{ from: 'blue.6', to: 'cyan.5' }}>
-                  <IconCar size={20} />
-                </ThemeIcon>
-                <div>
-                  <Text fw={800} size="md" style={{ letterSpacing: '-0.02em', color: '#fff', lineHeight: 1.1 }}>
-                    WashTrack
-                  </Text>
-                  <Text size="10px" c="dimmed" style={{ lineHeight: 1 }}>
-                    Oto Kuaför Takip Sistemi
-                  </Text>
-                </div>
-              </Group>
+          {/* Logo */}
+          <Group gap={10} px={6} mb="xl" mt={4} wrap="nowrap">
+            <ThemeIcon size={36} radius="md">
+              <IconCar size={20} />
+            </ThemeIcon>
+            <div>
+              <Text fw={800} fz={17} lh={1.1} style={{ letterSpacing: '-0.02em' }}>
+                WashTrack
+              </Text>
+              <Text fz={11} c="dimmed" lh={1.2}>
+                Oto Kuaför Takip
+              </Text>
+            </div>
+          </Group>
 
-              {/* FR-51: Ciroyu Gönder Butonu */}
-              <Tooltip label="Bugünkü ciro özetini patronun e-posta adresine gönderir (FR-51–55)">
-                <Button
+          {/* Menü */}
+          <AppShell.Section grow>
+            <Stack gap={2}>
+              {NAV_ITEMS.filter((item) => !item.access || canAccess(item.access)).map((item) => (
+                <NavLink
+                  key={item.key}
+                  label={item.label}
+                  leftSection={item.icon}
+                  active={currentNav === item.key}
+                  onClick={() => setCurrentNav(item.key)}
                   variant="light"
-                  color="cyan"
-                  size="xs"
+                  styles={{
+                    root: { borderRadius: 'var(--mantine-radius-md)', height: 40 },
+                    label: { fontWeight: 600, fontSize: 14 },
+                  }}
+                />
+              ))}
+            </Stack>
+          </AppShell.Section>
+
+          {/* Ciroyu Gönder (FR-51) + kullanıcı */}
+          <AppShell.Section>
+            <Stack gap="sm">
+              <Box>
+                <Button
+                  fullWidth
+                  variant="default"
                   loading={emailSending}
                   onClick={handleSendDailyEmail}
-                  leftSection={<IconMail size={15} />}
-                  rightSection={
-                    <Badge
-                      size="xs"
-                      color={queueStatus.todaySent ? 'teal' : queueStatus.failedCount > 0 ? 'red' : queueStatus.pendingCount > 0 ? 'yellow' : 'gray'}
-                      variant="dot"
-                    >
-                      {queueStatus.todaySent ? 'Gönderildi' : queueStatus.failedCount > 0 ? 'Hata' : queueStatus.pendingCount > 0 ? 'Kuyrukta' : 'Hazır'}
-                    </Badge>
-                  }
-                  styles={{
-                    root: {
-                      border: '1px solid rgba(34, 211, 238, 0.25)',
-                      backgroundColor: 'rgba(6, 182, 212, 0.08)',
-                    },
-                  }}
+                  leftSection={<IconMail size={17} />}
+                  justify="flex-start"
                 >
                   Ciroyu Gönder
                 </Button>
-              </Tooltip>
-            </Group>
+                <Group gap={6} mt={6} px={4}>
+                  <Box
+                    w={7}
+                    h={7}
+                    style={{ borderRadius: '50%', backgroundColor: `var(--mantine-color-${mailState.color}-6)` }}
+                  />
+                  <Text fz={12} c="dimmed">
+                    {mailState.label}
+                  </Text>
+                </Group>
+              </Box>
 
-            {/* Sağ Kısım: Sistem Durumu, Kullanıcı ve Çıkış */}
-            <Group gap="sm">
-              <Badge
-                variant="outline"
-                color={dbStatus.status === 'connected' ? 'teal' : 'yellow'}
-                leftSection={<IconDatabase size={12} />}
-                size="sm"
-              >
-                SQLite WAL ({dbStatus.tableCount || 20} Tablo)
-              </Badge>
+              <Box style={{ borderTop: '1px solid var(--app-border)' }} pt="sm">
+                <Group justify="space-between" wrap="nowrap">
+                  <Group gap="sm" wrap="nowrap">
+                    <Avatar color="brand" radius="xl" size={34}>
+                      {user?.kullanici_adi?.slice(0, 2).toUpperCase()}
+                    </Avatar>
+                    <div>
+                      <Text fz={14} fw={600} lh={1.2}>
+                        {user?.kullanici_adi}
+                      </Text>
+                      <Text fz={12} c="dimmed" lh={1.2}>
+                        {roleLabel}
+                      </Text>
+                    </div>
+                  </Group>
+                  <Tooltip label="Çıkış yap">
+                    <ActionIcon variant="subtle" color="gray" onClick={logout} aria-label="Çıkış yap">
+                      <IconLogout size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+                <Text fz={11} c="dimmed" mt="xs" px={4}>
+                  v{appVersion}
+                </Text>
+              </Box>
+            </Stack>
+          </AppShell.Section>
+        </AppShell.Navbar>
 
-              <Badge
-                variant="filled"
-                color={user?.rol === 'admin' ? 'blue' : 'teal'}
-                leftSection={<IconShieldCheck size={12} />}
-                size="sm"
-              >
-                {user?.kullanici_adi} ({user?.rol === 'admin' ? 'Yönetici' : 'Kasa'})
-              </Badge>
-
-              <Tooltip label="Oturumu Kapat">
-                <Button variant="subtle" color="red" size="xs" leftSection={<IconLogout size={14} />} onClick={logout}>
-                  Çıkış
-                </Button>
-              </Tooltip>
-            </Group>
-          </div>
-
-          {/* 2. Alt Katman: Ana Menü Navigasyon Butonları (48px) */}
-          <div
-            style={{
-              height: 48,
-              display: 'flex',
-              alignItems: 'center',
-              padding: '0 20px',
-              backgroundColor: 'rgba(15, 23, 42, 0.6)',
-            }}
-          >
-            <Group gap="xs">
-              <Button
-                variant={currentNav === 'dashboard' ? 'filled' : 'subtle'}
-                color="blue"
-                size="xs"
-                radius="sm"
-                leftSection={<IconLayoutDashboard size={15} />}
-                onClick={() => setCurrentNav('dashboard')}
-              >
-                Panel
-              </Button>
-
-              <Button
-                variant={currentNav === 'customers' ? 'filled' : 'subtle'}
-                color="blue"
-                size="xs"
-                radius="sm"
-                leftSection={<IconUsers size={15} />}
-                onClick={() => setCurrentNav('customers')}
-              >
-                Müşteri & Araç
-              </Button>
-
-              {canAccess('services') && (
-                <Button
-                  variant={currentNav === 'services' ? 'filled' : 'subtle'}
-                  color="blue"
-                  size="xs"
-                  radius="sm"
-                  leftSection={<IconWash size={15} />}
-                  onClick={() => setCurrentNav('services')}
-                >
-                  Hizmetler & Fiyat
-                </Button>
-              )}
-
-              <Button
-                variant={currentNav === 'stock' ? 'filled' : 'subtle'}
-                color="blue"
-                size="xs"
-                radius="sm"
-                leftSection={<IconPackage size={15} />}
-                onClick={() => setCurrentNav('stock')}
-              >
-                Stok & Malzeme
-              </Button>
-
-              {canAccess('finance') && (
-                <Button
-                  variant={currentNav === 'finance' ? 'filled' : 'subtle'}
-                  color="blue"
-                  size="xs"
-                  radius="sm"
-                  leftSection={<IconCoins size={15} />}
-                  onClick={() => setCurrentNav('finance')}
-                >
-                  Finans & Kasa
-                </Button>
-              )}
-
-              {canAccess('reports') && (
-                <Button
-                  variant={currentNav === 'reports' ? 'filled' : 'subtle'}
-                  color="blue"
-                  size="xs"
-                  radius="sm"
-                  leftSection={<IconChartBar size={15} />}
-                  onClick={() => setCurrentNav('reports')}
-                >
-                  Raporlar
-                </Button>
-              )}
-
-              {canAccess('settings') && (
-                <Button
-                  variant={currentNav === 'settings' ? 'filled' : 'subtle'}
-                  color="blue"
-                  size="xs"
-                  radius="sm"
-                  leftSection={<IconSettings size={15} />}
-                  onClick={() => setCurrentNav('settings')}
-                >
-                  Ayarlar
-                </Button>
-              )}
-            </Group>
-          </div>
-        </AppShell.Header>
-
-        <AppShell.Main>
-          <div style={{ maxWidth: 1400, margin: '0 auto', padding: '16px' }}>
+        <AppShell.Main style={{ backgroundColor: 'var(--app-bg)', minHeight: '100vh' }}>
+          <Box maw={1360} mx="auto" px={32} py={28}>
             {currentNav === 'services' && <ServicesPage />}
             {currentNav === 'customers' && <CustomersPage />}
             {currentNav === 'stock' && <StockPage />}
@@ -320,7 +221,7 @@ function MainLayout() {
             {currentNav === 'reports' && <ReportsPage />}
             {currentNav === 'settings' && <SettingsPage />}
             {currentNav === 'dashboard' && <OrdersDashboard />}
-          </div>
+          </Box>
         </AppShell.Main>
       </AppShell>
     </>

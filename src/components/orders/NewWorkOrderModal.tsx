@@ -24,13 +24,11 @@ import {
   IconShieldLock,
 } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
-
 interface NewWorkOrderModalProps {
   opened: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
-
 export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderModalProps) {
   const { user } = useAuth();
 
@@ -68,7 +66,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
   // Verileri yükle
   useEffect(() => {
     if (!opened || !window.electronAPI) return;
-
     setError(null);
     setPlateInput('');
     setNormalizedPlate('');
@@ -80,7 +77,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
     setSelectedServiceIds([]);
     setDiscountTl('0');
     setAdminPin('');
-
     Promise.all([
       window.electronAPI.invoke('vehicles:getTypes'),
       window.electronAPI.invoke('customers:getAll'),
@@ -109,7 +105,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
       setNormalizedPlate('');
       return;
     }
-
     try {
       const res = await window.electronAPI.invoke('vehicles:searchPlate', { rawPlate: val });
       if (res.isValid && res.normalizedPlate) {
@@ -151,33 +146,26 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
   const isCashier = user?.rol === 'cashier';
   const discountPercent = grossTotalKurus > 0 ? (discountKurus / grossTotalKurus) * 100 : 0;
   const requiresAdminPin = isCashier && discountPercent > 10;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     if (!plateInput.trim()) {
       setError('Lütfen bir plaka girin.');
       return;
     }
-
     if (selectedServiceIds.length === 0) {
       setError('Lütfen en az bir hizmet seçin.');
       return;
     }
-
     if (discountKurus > grossTotalKurus) {
       setError('İndirim tutarı toplam tutardan büyük olamaz.');
       return;
     }
-
     if (requiresAdminPin && !adminPin.trim()) {
       setError('%10 üzeri indirim için Yönetici PIN onayı zorunludur.');
       return;
     }
-
     setLoading(true);
-
     try {
       if (!window.electronAPI) return;
 
@@ -202,7 +190,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
         hizmet_id: hizmetId,
         staff_id: selectedStaffId ? parseInt(selectedStaffId, 10) : undefined,
       }));
-
       await window.electronAPI.invoke('orders:create', {
         userId: user?.id,
         data: {
@@ -212,7 +199,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
           adminPin: requiresAdminPin ? adminPin : undefined,
         },
       });
-
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -221,7 +207,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
       setLoading(false);
     }
   };
-
   return (
     <Modal
       opened={opened}
@@ -230,7 +215,7 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
       title={
         <Group justify="space-between" w="100%">
           <Group gap="xs">
-            <ThemeIcon size={30} radius="md" color="blue" variant="gradient" gradient={{ from: 'blue.6', to: 'indigo.6' }}>
+            <ThemeIcon size={30} radius="md" color="brand">
               <IconPlus size={18} />
             </ThemeIcon>
             <div>
@@ -239,16 +224,12 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
             </div>
           </Group>
           {normalizedPlate && (
-            <Badge color="blue" size="lg" variant="filled">
+            <Badge color="brand" size="lg" variant="filled">
               {normalizedPlate}
             </Badge>
           )}
         </Group>
       }
-      styles={{
-        content: { backgroundColor: '#0f172a', border: '1px solid rgba(51, 65, 85, 0.6)' },
-        header: { backgroundColor: '#0f172a', borderBottom: '1px solid rgba(51, 65, 85, 0.4)' },
-      }}
       centered
     >
       <form onSubmit={handleSubmit}>
@@ -260,7 +241,7 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
           )}
 
           {/* 1. Araç & Plaka Bilgileri */}
-          <Paper p="sm" radius="md" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', border: '1px solid #334155' }}>
+          <Paper p="sm" radius="md">
             <Group justify="space-between" mb="xs">
               <Text size="xs" fw={700} c="dimmed" tt="uppercase">1. Araç & Müşteri Tanımı</Text>
               {matchedVehicle ? (
@@ -279,7 +260,7 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
                 required
                 autoFocus
                 styles={{
-                  input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff', fontWeight: 700, letterSpacing: '0.05em' },
+                  input: { fontWeight: 700, letterSpacing: '0.05em' },
                 }}
               />
 
@@ -289,9 +270,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
                 onChange={(val) => val && setSelectedVehicleTypeId(val)}
                 data={vehicleTypes.map((vt) => ({ value: vt.id.toString(), label: vt.ad }))}
                 required
-                styles={{
-                  input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' },
-                }}
               />
             </SimpleGrid>
 
@@ -301,14 +279,12 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
                 placeholder="Örn: Renault"
                 value={brand}
                 onChange={(e) => setBrand(e.currentTarget.value)}
-                styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
               />
               <TextInput
                 label="Model"
                 placeholder="Örn: Megane"
                 value={model}
                 onChange={(e) => setModel(e.currentTarget.value)}
-                styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
               />
               <Select
                 label="Müşteri (Opsiyonel)"
@@ -321,28 +297,27 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
                   value: c.id.toString(),
                   label: `${c.ad} ${c.telefon ? `(${c.telefon})` : ''}`,
                 }))}
-                styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
               />
             </SimpleGrid>
           </Paper>
 
           {/* 2. Hizmet Seçimi */}
-          <Paper p="sm" radius="md" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', border: '1px solid #334155' }}>
+          <Paper p="sm" radius="md">
             <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb="xs">2. Hizmet Seçimi</Text>
             <Stack gap="xs">
               {allServices.map((service) => {
                 const price = getServicePrice(service.id);
                 const isChecked = selectedServiceIds.includes(service.id);
-
                 return (
                   <Group
                     key={service.id}
                     justify="space-between"
                     p="xs"
                     style={{
-                      backgroundColor: isChecked ? 'rgba(59, 130, 246, 0.15)' : 'rgba(15, 23, 42, 0.4)',
-                      borderRadius: 6,
-                      border: isChecked ? '1px solid rgba(59, 130, 246, 0.5)' : '1px solid transparent',
+                      backgroundColor: isChecked ? 'var(--mantine-color-brand-0)' : 'var(--app-surface)',
+                      borderRadius: 8,
+                      border: isChecked ? '1px solid var(--mantine-color-brand-4)' : '1px solid var(--app-border)',
+                      transition: 'background-color 120ms, border-color 120ms',
                       cursor: 'pointer',
                     }}
                     onClick={() => {
@@ -357,7 +332,7 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
                       label={service.ad}
                       checked={isChecked}
                       onChange={() => {}} // onClick ile yönetiliyor
-                      styles={{ label: { color: '#fff', cursor: 'pointer', fontWeight: 500 } }}
+                      styles={{ label: { cursor: 'pointer', fontWeight: 500 } }}
                     />
                     <Text fw={700} c={price > 0 ? 'teal' : 'dimmed'}>
                       {(price / 100).toFixed(2)} ₺
@@ -377,7 +352,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
               value={selectedStaffId}
               onChange={setSelectedStaffId}
               data={allStaff.map((s) => ({ value: s.id.toString(), label: s.ad }))}
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
 
             <TextInput
@@ -387,7 +361,6 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
               onChange={(e) => setDiscountTl(e.currentTarget.value)}
               type="number"
               min="0"
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
           </SimpleGrid>
 
@@ -402,19 +375,19 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
                 value={adminPin}
                 onChange={(e) => setAdminPin(e.currentTarget.value)}
                 required
-                styles={{ input: { backgroundColor: '#1e293b', borderColor: '#f59e0b', color: '#fff' } }}
+                styles={{ input: { borderColor: 'var(--mantine-color-yellow-5)', } }}
               />
             </Alert>
           )}
 
-          <Divider color="#334155" />
+          <Divider />
 
           {/* Fiyat Özeti Kutusu */}
-          <Paper p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)', border: '1px solid #334155' }}>
+          <Paper p="md" radius="md">
             <Group justify="space-between">
               <div>
                 <Text size="xs" c="dimmed">Brüt Tutar</Text>
-                <Text fw={600} size="sm" c="white">{(grossTotalKurus / 100).toFixed(2)} ₺</Text>
+                <Text fw={600} size="sm">{(grossTotalKurus / 100).toFixed(2)} ₺</Text>
               </div>
               {discountKurus > 0 && (
                 <div>
@@ -438,7 +411,7 @@ export function NewWorkOrderModal({ opened, onClose, onSuccess }: NewWorkOrderMo
             </Button>
             <Button
               type="submit"
-              color="blue"
+              color="brand"
               size="md"
               loading={loading}
               leftSection={<IconCheck size={18} />}

@@ -14,13 +14,11 @@ import {
 } from '@mantine/core';
 import { IconTrash, IconPlus, IconAlertCircle, IconCheck, IconBottle } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
-
 interface RecipeModalProps {
   opened: boolean;
   service: { id: number; ad: string } | null;
   onClose: () => void;
 }
-
 export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
   const { user } = useAuth();
   const [recipes, setRecipes] = useState<any[]>([]);
@@ -29,7 +27,6 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
   const [amount, setAmount] = useState<number | string>(0.1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const loadRecipes = async () => {
     if (!service || !window.electronAPI) return;
     try {
@@ -43,7 +40,6 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
       console.error(err);
     }
   };
-
   useEffect(() => {
     if (opened && service) {
       setError(null);
@@ -52,22 +48,18 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
       loadRecipes();
     }
   }, [opened, service]);
-
   if (!service) return null;
-
   const handleAddRecipe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProductId) {
       setError('Lütfen bir stok ürünü seçin.');
       return;
     }
-
     const qty = parseFloat(amount.toString());
     if (isNaN(qty) || qty <= 0) {
       setError('Tüketim miktarı sıfırdan büyük olmalıdır.');
       return;
     }
-
     setLoading(true);
     setError(null);
     try {
@@ -88,7 +80,6 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
       setLoading(false);
     }
   };
-
   const handleRemove = async (productId: number) => {
     if (!window.electronAPI) return;
     try {
@@ -102,7 +93,6 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
       alert(err?.message || 'Silinirken hata oluştu.');
     }
   };
-
   return (
     <Modal
       opened={opened}
@@ -110,21 +100,17 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
       size="lg"
       title={
         <Group gap="xs">
-          <ThemeIcon size={28} radius="md" color="blue">
+          <ThemeIcon size={28} radius="md" color="brand">
             <IconBottle size={16} />
           </ThemeIcon>
           <Text fw={700}>Hizmet Reçetesi (Malzeme Tüketimi) • {service.ad}</Text>
         </Group>
       }
-      styles={{
-        content: { backgroundColor: '#0f172a', border: '1px solid rgba(51, 65, 85, 0.6)' },
-        header: { backgroundColor: '#0f172a', borderBottom: '1px solid rgba(51, 65, 85, 0.4)' },
-      }}
       centered
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Bu hizmet her tamamlandığında reçetedeki malzemeler otomatik olarak stoktan düşülecektir (FR-21, FR-22).
+          Bu hizmet her tamamlandığında reçetedeki malzemeler otomatik olarak stoktan düşülecektir.
         </Text>
 
         {error && (
@@ -147,7 +133,6 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
               }))}
               style={{ flex: 1 }}
               required
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
 
             <NumberInput
@@ -159,12 +144,11 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
               decimalScale={3}
               required
               w={140}
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
 
             <Button
               type="submit"
-              color="blue"
+              color="brand"
               loading={loading}
               leftSection={<IconPlus size={16} />}
             >
@@ -176,10 +160,6 @@ export function RecipeModal({ opened, service, onClose }: RecipeModalProps) {
         {/* Mevcut Reçete Tablosu */}
         <Table
           verticalSpacing="sm"
-          styles={{
-            th: { color: '#94a3b8', borderBottomColor: '#334155' },
-            td: { color: '#fff', borderBottomColor: '#1e293b' },
-          }}
         >
           <Table.Thead>
             <Table.Tr>

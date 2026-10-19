@@ -2,31 +2,25 @@ import React, { useState } from 'react';
 import { Modal, TextInput, Button, Group, Text, Alert, ThemeIcon } from '@mantine/core';
 import { IconCash, IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import { useAuth } from '../../context/AuthContext';
-
 interface CashOpenModalProps {
   opened: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
-
 export function CashOpenModal({ opened, onClose, onSuccess }: CashOpenModalProps) {
   const { user } = useAuth();
   const [acilisTl, setAcilisTl] = useState('0');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     const val = parseFloat(acilisTl);
     if (isNaN(val) || val < 0) {
       setError('Lütfen geçerli bir açılış kasa tutarı girin.');
       return;
     }
-
     const acilisKurus = Math.round(val * 100);
-
     setLoading(true);
     try {
       if (window.electronAPI) {
@@ -43,7 +37,6 @@ export function CashOpenModal({ opened, onClose, onSuccess }: CashOpenModalProps
       setLoading(false);
     }
   };
-
   return (
     <Modal
       opened={opened}
@@ -56,10 +49,6 @@ export function CashOpenModal({ opened, onClose, onSuccess }: CashOpenModalProps
           <Text fw={700}>Günün Kasa Oturumunu Aç</Text>
         </Group>
       }
-      styles={{
-        content: { backgroundColor: '#0f172a', border: '1px solid rgba(51, 65, 85, 0.6)' },
-        header: { backgroundColor: '#0f172a', borderBottom: '1px solid rgba(51, 65, 85, 0.4)' },
-      }}
       centered
     >
       <form onSubmit={handleSubmit}>
@@ -85,7 +74,7 @@ export function CashOpenModal({ opened, onClose, onSuccess }: CashOpenModalProps
           autoFocus
           mb="xl"
           styles={{
-            input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff', fontSize: 18, fontWeight: 700 },
+            input: { fontSize: 18, fontWeight: 700 },
           }}
         />
 
@@ -95,7 +84,6 @@ export function CashOpenModal({ opened, onClose, onSuccess }: CashOpenModalProps
           </Button>
           <Button
             type="submit"
-            color="teal"
             loading={loading}
             leftSection={<IconCheck size={16} />}
           >

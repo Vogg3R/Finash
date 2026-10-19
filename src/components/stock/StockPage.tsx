@@ -32,8 +32,8 @@ import {
   IconCheck,
   IconAlertCircle,
 } from '@tabler/icons-react';
+import { PageHeader } from '../ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
-
 export function StockPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('products');
@@ -65,10 +65,8 @@ export function StockPage() {
   const [manualType, setManualType] = useState<'waste' | 'audit'>('waste');
   const [manualAmount, setManualAmount] = useState<number | string>(1);
   const [manualDesc, setManualDesc] = useState('');
-
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
   const loadData = useCallback(async () => {
     if (!window.electronAPI) return;
     setLoading(true);
@@ -87,7 +85,6 @@ export function StockPage() {
       setLoading(false);
     }
   }, []);
-
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -99,7 +96,6 @@ export function StockPage() {
       setFormError('Lütfen ürün adını girin.');
       return;
     }
-
     setSubmitting(true);
     setFormError(null);
     try {
@@ -132,14 +128,12 @@ export function StockPage() {
       setFormError('Lütfen ürün seçin.');
       return;
     }
-
     const qty = Number(purchaseAmount);
     const totalTL = Number(purchaseTotalTL);
     if (qty <= 0 || totalTL <= 0) {
       setFormError('Miktar ve tutar sıfırdan büyük olmalıdır.');
       return;
     }
-
     setSubmitting(true);
     setFormError(null);
     try {
@@ -171,13 +165,11 @@ export function StockPage() {
       setFormError('Lütfen ürün seçin.');
       return;
     }
-
     const qty = Number(manualAmount);
     if (qty <= 0) {
       setFormError('Miktar sıfırdan büyük olmalıdır.');
       return;
     }
-
     setSubmitting(true);
     setFormError(null);
     try {
@@ -203,30 +195,21 @@ export function StockPage() {
 
   // Kritik Stok Sayısı
   const criticalCount = products.filter((p) => p.mevcut_miktar <= p.kritik_seviye).length;
-
   return (
     <Stack gap="lg">
-      <Group justify="space-between" align="center">
-        <div>
-          <Title order={2} c="white">
-            Stok & Malzeme Yönetimi
-          </Title>
-          <Text size="sm" c="dimmed">
-            Ürün kartları, otomatik reçete tüketimi ve satın alma takibi (FR-19 - FR-26).
-          </Text>
-        </div>
+      <Group justify="space-between" align="flex-end">
+        <PageHeader title="Stok & Malzeme Yönetimi" description="Ürün kartları, otomatik reçete tüketimi ve satın alma takibi." />
 
         <Group gap="xs">
           <Tooltip label="Yenile">
-            <ActionIcon variant="light" color="blue" size="lg" onClick={loadData} loading={loading}>
+            <ActionIcon variant="default" size={36} onClick={loadData} loading={loading} aria-label="Yenile">
               <IconRefresh size={18} />
             </ActionIcon>
           </Tooltip>
 
           <Button
             leftSection={<IconFlame size={16} />}
-            color="red"
-            variant="light"
+            variant="default"
             onClick={() => {
               setFormError(null);
               setManualModal(true);
@@ -237,8 +220,7 @@ export function StockPage() {
 
           <Button
             leftSection={<IconShoppingCartPlus size={16} />}
-            color="teal"
-            variant="light"
+            variant="default"
             onClick={() => {
               setFormError(null);
               setPurchaseModal(true);
@@ -249,7 +231,7 @@ export function StockPage() {
 
           <Button
             leftSection={<IconPlus size={16} />}
-            color="blue"
+            color="brand"
             onClick={() => {
               setFormError(null);
               setNewProductModal(true);
@@ -266,14 +248,13 @@ export function StockPage() {
           color="red"
           icon={<IconAlertTriangle size={18} />}
           title={`Kritik Stok Uyarısı (${criticalCount} Ürün)`}
-          styles={{ root: { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.4)' } }}
         >
           Aşağıdaki ürünlerin stok miktarı belirlenen kritik seviyenin altına düşmüştür. Lütfen tedarik siparişi veriniz.
         </Alert>
       )}
 
       {/* Sekmeler */}
-      <Tabs value={activeTab} onChange={(val) => val && setActiveTab(val)} variant="pills" color="blue">
+      <Tabs value={activeTab} onChange={(val) => val && setActiveTab(val)} variant="pills" color="brand">
         <Tabs.List mb="md">
           <Tabs.Tab value="products">
             Stok Kartları ({products.length})
@@ -288,10 +269,6 @@ export function StockPage() {
           <Paper
             p="md"
             radius="md"
-            style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
-            }}
           >
             <Table highlightOnHover verticalSpacing="sm">
               <Table.Thead>
@@ -317,7 +294,7 @@ export function StockPage() {
                     const isCritical = p.mevcut_miktar <= p.kritik_seviye;
                     return (
                       <Table.Tr key={p.id}>
-                        <Table.Td fw={700} c="white">
+                        <Table.Td fw={700}>
                           {p.ad}
                         </Table.Td>
                         <Table.Td c="dimmed">{p.kategori || '-'}</Table.Td>
@@ -360,10 +337,6 @@ export function StockPage() {
           <Paper
             p="md"
             radius="md"
-            style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(51, 65, 85, 0.4)',
-            }}
           >
             <Table highlightOnHover verticalSpacing="sm">
               <Table.Thead>
@@ -387,7 +360,6 @@ export function StockPage() {
                   movements.map((m) => {
                     const mov = m.movement;
                     const dateStr = new Date(mov.zaman).toLocaleString('tr-TR');
-
                     let badgeColor = 'blue';
                     let typeLabel = mov.tur;
                     if (mov.tur === 'in') {
@@ -406,11 +378,10 @@ export function StockPage() {
                       badgeColor = 'purple';
                       typeLabel = 'Sayım Düzeltme';
                     }
-
                     return (
                       <Table.Tr key={mov.id}>
                         <Table.Td><Text size="xs" c="dimmed">{dateStr}</Text></Table.Td>
-                        <Table.Td fw={700} c="white">{m.product?.ad}</Table.Td>
+                        <Table.Td fw={700}>{m.product?.ad}</Table.Td>
                         <Table.Td>
                           <Badge color={badgeColor} variant="light">{typeLabel}</Badge>
                         </Table.Td>
@@ -436,14 +407,10 @@ export function StockPage() {
         onClose={() => setNewProductModal(false)}
         title={
           <Group gap="xs">
-            <ThemeIcon size={28} radius="md" color="blue"><IconPackage size={16} /></ThemeIcon>
+            <ThemeIcon size={28} radius="md" color="brand"><IconPackage size={16} /></ThemeIcon>
             <Text fw={700}>Yeni Stok Kartı Ekle</Text>
           </Group>
         }
-        styles={{
-          content: { backgroundColor: '#0f172a', border: '1px solid rgba(51, 65, 85, 0.6)' },
-          header: { backgroundColor: '#0f172a', borderBottom: '1px solid rgba(51, 65, 85, 0.4)' },
-        }}
         centered
       >
         <form onSubmit={handleCreateProduct}>
@@ -456,14 +423,12 @@ export function StockPage() {
               onChange={(e) => setProdName(e.currentTarget.value)}
               required
               autoFocus
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
             <TextInput
               label="Kategori (Opsiyonel)"
               placeholder="Örn: Kimyasal, Bez, Temizlik"
               value={prodCategory}
               onChange={(e) => setProdCategory(e.currentTarget.value)}
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
             <SimpleGrid cols={2}>
               <Select
@@ -475,20 +440,18 @@ export function StockPage() {
                   { value: 'kg', label: 'Kilogram (kg)' },
                   { value: 'piece', label: 'Adet (piece)' },
                 ]}
-                styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
               />
               <NumberInput
                 label="Kritik Stok Seviyesi"
                 value={prodCritical}
                 onChange={(val) => setProdCritical(val)}
                 min={0}
-                styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
               />
             </SimpleGrid>
 
             <Group justify="flex-end" mt="md">
               <Button variant="subtle" color="gray" onClick={() => setNewProductModal(false)}>İptal</Button>
-              <Button type="submit" color="blue" loading={submitting}>Ürünü Kaydet</Button>
+              <Button type="submit" color="brand" loading={submitting}>Ürünü Kaydet</Button>
             </Group>
           </Stack>
         </form>
@@ -504,10 +467,6 @@ export function StockPage() {
             <Text fw={700}>Stok Girişi (Satın Alma)</Text>
           </Group>
         }
-        styles={{
-          content: { backgroundColor: '#0f172a', border: '1px solid rgba(51, 65, 85, 0.6)' },
-          header: { backgroundColor: '#0f172a', borderBottom: '1px solid rgba(51, 65, 85, 0.4)' },
-        }}
         centered
       >
         <form onSubmit={handlePurchase}>
@@ -520,7 +479,6 @@ export function StockPage() {
               onChange={setPurchaseProductId}
               data={products.map((p) => ({ value: p.id.toString(), label: `${p.ad} (${p.birim})` }))}
               required
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
             <SimpleGrid cols={2}>
               <NumberInput
@@ -529,7 +487,6 @@ export function StockPage() {
                 onChange={(val) => setPurchaseAmount(val)}
                 min={0.1}
                 required
-                styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
               />
               <NumberInput
                 label="Toplam Alış Tutarı (TL)"
@@ -537,7 +494,6 @@ export function StockPage() {
                 onChange={(val) => setPurchaseTotalTL(val)}
                 min={0}
                 required
-                styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
               />
             </SimpleGrid>
 
@@ -548,19 +504,17 @@ export function StockPage() {
               value={purchaseSupplierId}
               onChange={setPurchaseSupplierId}
               data={suppliers.map((s) => ({ value: s.id.toString(), label: s.ad }))}
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
 
             <Checkbox
               label="Kasadan Malzeme Gideri Olarak Düş (Transactions Tablosuna Yaz)"
               checked={purchaseCreateExpense}
               onChange={(e) => setPurchaseCreateExpense(e.currentTarget.checked)}
-              styles={{ label: { color: '#fff' } }}
             />
 
             <Group justify="flex-end" mt="md">
               <Button variant="subtle" color="gray" onClick={() => setPurchaseModal(false)}>İptal</Button>
-              <Button type="submit" color="teal" loading={submitting}>Stok Girişini Onayla</Button>
+              <Button type="submit" loading={submitting}>Stok Girişini Onayla</Button>
             </Group>
           </Stack>
         </form>
@@ -576,10 +530,6 @@ export function StockPage() {
             <Text fw={700}>Manuel Stok Çıkışı / Sayım Düzeltmesi</Text>
           </Group>
         }
-        styles={{
-          content: { backgroundColor: '#0f172a', border: '1px solid rgba(51, 65, 85, 0.6)' },
-          header: { backgroundColor: '#0f172a', borderBottom: '1px solid rgba(51, 65, 85, 0.4)' },
-        }}
         centered
       >
         <form onSubmit={handleManualMovement}>
@@ -593,7 +543,6 @@ export function StockPage() {
                 { value: 'waste', label: 'Fire / Zayiat Çıkışı' },
                 { value: 'audit', label: 'Haftalık Sayım Düzeltmesi' },
               ]}
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
             <Select
               label="Ürün Seçin"
@@ -601,7 +550,6 @@ export function StockPage() {
               onChange={setManualProductId}
               data={products.map((p) => ({ value: p.id.toString(), label: `${p.ad} (Mevcut: ${p.mevcut_miktar} ${p.birim})` }))}
               required
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
             <NumberInput
               label="Düzeltme / Fire Miktarı"
@@ -609,19 +557,17 @@ export function StockPage() {
               onChange={(val) => setManualAmount(val)}
               min={0.01}
               required
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
             <TextInput
               label="Açıklama / Sebep"
               placeholder="Örn: Bidon patladı, döküldü..."
               value={manualDesc}
               onChange={(e) => setManualDesc(e.currentTarget.value)}
-              styles={{ input: { backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' } }}
             />
 
             <Group justify="flex-end" mt="md">
               <Button variant="subtle" color="gray" onClick={() => setManualModal(false)}>İptal</Button>
-              <Button type="submit" color="red" loading={submitting}>Düzeltmeyi Kaydet</Button>
+              <Button type="submit" loading={submitting}>Düzeltmeyi Kaydet</Button>
             </Group>
           </Stack>
         </form>

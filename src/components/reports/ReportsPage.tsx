@@ -24,6 +24,8 @@ import {
   IconDownload,
   IconPrinter,
 } from '@tabler/icons-react';
+import { StatCard } from '../ui/StatCard';
+import { PageHeader } from '../ui/PageHeader';
 import {
   BarChart,
   Bar,
@@ -37,9 +39,11 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#64748b'];
-
+// Grafik paleti: ilk renk uygulamanın vurgu rengi (brand-6), diğerleri Mantine 6. tonları
+const COLORS = ['#4870e9', '#12b886', '#f59f00', '#e64980', '#7950f2', '#15aabf', '#868e96'];
+const CHART_GRID = '#e7e9ee';
+const CHART_AXIS = '#868e96';
+const TOOLTIP_STYLE = { borderRadius: 10, border: '1px solid #e7e9ee', boxShadow: '0 4px 12px rgba(16, 24, 40, 0.08)' };
 export function ReportsPage() {
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [reportData, setReportData] = useState<any>({
@@ -48,7 +52,6 @@ export function ReportsPage() {
     staffPerformance: [],
   });
   const [loading, setLoading] = useState(false);
-
   const loadData = useCallback(async () => {
     if (!window.electronAPI) return;
     setLoading(true);
@@ -61,25 +64,17 @@ export function ReportsPage() {
       setLoading(false);
     }
   }, [period]);
-
   useEffect(() => {
     loadData();
   }, [loadData]);
-
   const totalPeriodVehicles = (reportData.trend || []).reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
   const totalPeriodRevenue = (reportData.trend || []).reduce((sum: number, t: any) => sum + (t.revenue || 0), 0);
   const totalPeriodProfit = (reportData.trend || []).reduce((sum: number, t: any) => sum + (t.netProfit || 0), 0);
-
   return (
     <Stack gap="lg">
       {/* Üst Bar */}
-      <Group justify="space-between" align="center">
-        <div>
-          <Title order={2} c="white">Raporlar & Analizler</Title>
-          <Text size="sm" c="dimmed">
-            İşletme performansı, araç yıkama trendleri, hizmet satışları ve personel primleri (FR-36–39)
-          </Text>
-        </div>
+      <Group justify="space-between" align="flex-end">
+        <PageHeader title="Raporlar & Analizler" description="İşletme performansı, araç yıkama trendleri, hizmet satışları ve personel primleri" />
 
         <Group gap="sm">
           <SegmentedControl
@@ -93,14 +88,13 @@ export function ReportsPage() {
           />
 
           <Tooltip label="Yenile">
-            <ActionIcon variant="light" color="blue" size="lg" onClick={loadData} loading={loading}>
+            <ActionIcon variant="default" size={36} onClick={loadData} loading={loading} aria-label="Yenile">
               <IconRefresh size={18} />
             </ActionIcon>
           </Tooltip>
 
           <Button
-            variant="light"
-            color="green"
+            variant="default"
             leftSection={<IconDownload size={16} />}
             onClick={async () => {
               try {
@@ -127,8 +121,7 @@ export function ReportsPage() {
           </Button>
 
           <Button
-            variant="light"
-            color="cyan"
+            variant="default"
             leftSection={<IconPrinter size={16} />}
             onClick={() => window.print()}
           >
@@ -139,48 +132,24 @@ export function ReportsPage() {
 
       {/* Dönem Özeti KPI Kartları */}
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-        <Card p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Dönem Yıkanan Araç</Text>
-            <ThemeIcon size={28} radius="md" color="blue" variant="light">
-              <IconCar size={16} />
-            </ThemeIcon>
-          </Group>
-          <Text size="xl" fw={800} c="white" mt={4}>
-            {totalPeriodVehicles} Araç
-          </Text>
-        </Card>
+        <StatCard label="Dönem Yıkanan Araç" value={<>{totalPeriodVehicles} Araç</>} icon={<IconCar size={17} />} color="brand" />
 
-        <Card p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Dönem Net Gelir</Text>
-            <ThemeIcon size={28} radius="md" color="teal" variant="light">
-              <IconCoins size={16} />
-            </ThemeIcon>
-          </Group>
-          <Text size="xl" fw={800} c="teal" mt={4}>
-            {totalPeriodRevenue.toLocaleString('tr-TR')} ₺
-          </Text>
-        </Card>
+        <StatCard label="Dönem Net Gelir" value={<>{totalPeriodRevenue.toLocaleString('tr-TR')} ₺</>} icon={<IconCoins size={17} />} color="teal" />
 
-        <Card p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Dönem Net Kâr</Text>
-            <ThemeIcon size={28} radius="md" color={totalPeriodProfit >= 0 ? 'green' : 'red'} variant="light">
-              <IconCoins size={16} />
-            </ThemeIcon>
-          </Group>
-          <Text size="xl" fw={800} c={totalPeriodProfit >= 0 ? 'green' : 'red'} mt={4}>
-            {totalPeriodProfit.toLocaleString('tr-TR')} ₺
-          </Text>
-        </Card>
+        <StatCard
+          label="Dönem Net Kâr"
+          value={`${totalPeriodProfit.toLocaleString('tr-TR')} ₺`}
+          icon={<IconCoins size={17} />}
+          color={totalPeriodProfit >= 0 ? 'green' : 'red'}
+          valueColor={totalPeriodProfit < 0 ? 'red' : undefined}
+        />
       </SimpleGrid>
 
       {/* Grafikler Grid */}
       <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg">
         {/* Grafik 1: Araç Sayısı ve Finansal Trend (BarChart) */}
-        <Paper p="md" radius="md" withBorder style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', borderColor: '#334155' }}>
-          <Title order={4} c="white" mb="xs">
+        <Paper p="md" radius="md" withBorder>
+          <Title order={4} mb="xs">
             Gelir, Gider ve Araç Sayısı Trendi
           </Title>
           <Text size="xs" c="dimmed" mb="md">
@@ -189,25 +158,24 @@ export function ReportsPage() {
           <div style={{ width: '100%', height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={reportData.trend || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="label" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
-                <RechartsTooltip
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: 8 }}
-                  itemStyle={{ color: '#fff' }}
-                />
-                <Legend />
-                <Bar dataKey="revenue" name="Net Gelir (₺)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" name="Gider (₺)" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="vehicleCount" name="Araç Sayısı" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <CartesianGrid vertical={false} stroke={CHART_GRID} />
+                <XAxis dataKey="label" stroke={CHART_AXIS} tickLine={false} axisLine={false} fontSize={12} />
+                {/* ₺ ve araç adedi farklı ölçeklerde: ayrı eksenler, yoksa araç sütunları görünmez */}
+                <YAxis yAxisId="tl" stroke={CHART_AXIS} tickLine={false} axisLine={false} fontSize={12} />
+                <YAxis yAxisId="adet" orientation="right" stroke={CHART_AXIS} tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
+                <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(72, 112, 233, 0.06)' }} />
+                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                <Bar yAxisId="tl" dataKey="revenue" name="Net Gelir (₺)" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="tl" dataKey="expense" name="Gider (₺)" fill="#fa5252" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="adet" dataKey="vehicleCount" name="Araç Sayısı" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Paper>
 
         {/* Grafik 2: Hizmet Satış Dağılımı (PieChart & Table) */}
-        <Paper p="md" radius="md" withBorder style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', borderColor: '#334155' }}>
-          <Title order={4} c="white" mb="xs">
+        <Paper p="md" radius="md" withBorder>
+          <Title order={4} mb="xs">
             Hizmet Satış Dağılımı
           </Title>
           <Text size="xs" c="dimmed" mb="md">
@@ -223,21 +191,23 @@ export function ReportsPage() {
                     nameKey="serviceName"
                     cx="50%"
                     cy="50%"
+                    innerRadius={62}
                     outerRadius={100}
-                    label={(entry) => `${entry.serviceName} (${entry.count})`}
+                    paddingAngle={2}
+                    stroke="none"
                   >
                     {reportData.serviceBreakdown.map((_: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <RechartsTooltip
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: 8 }}
+                    contentStyle={TOOLTIP_STYLE}
                     formatter={(value: any, name: any, item: any) => [
                       `${value} adet (${((item.payload.totalRevenueKurus || 0) / 100).toFixed(2)} ₺)`,
                       name,
                     ]}
                   />
-                  <Legend />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -250,10 +220,10 @@ export function ReportsPage() {
       </SimpleGrid>
 
       {/* Personel Performansı ve Prim Raporu Tablosu (FR-39) */}
-      <Paper p="md" radius="md" withBorder style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', borderColor: '#334155' }}>
+      <Paper p="md" radius="md" withBorder>
         <Group justify="space-between" mb="sm">
           <div>
-            <Title order={4} c="white">
+            <Title order={4}>
               Personel Performansı & Hak Edilen Primler
             </Title>
             <Text size="xs" c="dimmed">
@@ -286,10 +256,10 @@ export function ReportsPage() {
               reportData.staffPerformance.map((st: any) => (
                 <Table.Tr key={st.id}>
                   <Table.Td>
-                    <Text size="sm" fw={600} c="white">{st.name}</Text>
+                    <Text size="sm" fw={600}>{st.name}</Text>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color="blue" variant="light">%{st.primOrani}</Badge>
+                    <Badge color="brand" variant="light">%{st.primOrani}</Badge>
                   </Table.Td>
                   <Table.Td style={{ textAlign: 'center' }}>
                     <Badge color="gray" variant="filled">{st.jobCount} İş</Badge>

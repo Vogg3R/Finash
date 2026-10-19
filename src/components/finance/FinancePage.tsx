@@ -34,8 +34,9 @@ import {
   IconAlertCircle,
   IconCheck,
 } from '@tabler/icons-react';
+import { StatCard } from '../ui/StatCard';
+import { PageHeader } from '../ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
-
 export function FinancePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('transactions');
@@ -84,7 +85,6 @@ export function FinancePage() {
       if (filterEndDate) filters.endDate = `${filterEndDate} 23:59:59`;
       if (filterTur !== 'all') filters.tur = filterTur;
       if (filterYontem !== 'all') filters.yontem = filterYontem;
-
       const [txList, tot, cats, session] = await Promise.all([
         window.electronAPI.invoke('finance:getTransactions', { filters }),
         window.electronAPI.invoke('finance:getNetProfit', {
@@ -94,7 +94,6 @@ export function FinancePage() {
         window.electronAPI.invoke('finance:getCategories'),
         window.electronAPI.invoke('cash:getOpenSession'),
       ]);
-
       setTransactions(txList || []);
       setTotals(tot || { totalIncome: 0, totalRefund: 0, totalExpense: 0, netRevenue: 0, netProfit: 0 });
       setCategories(cats || []);
@@ -108,7 +107,6 @@ export function FinancePage() {
       setLoading(false);
     }
   }, [filterStartDate, filterEndDate, filterTur, filterYontem]);
-
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -121,7 +119,6 @@ export function FinancePage() {
       alert('Geçerli bir tutar giriniz.');
       return;
     }
-
     try {
       await window.electronAPI.invoke('finance:addTransaction', {
         userId: user.id,
@@ -133,7 +130,6 @@ export function FinancePage() {
           aciklama: txAciklama.trim() || null,
         },
       });
-
       setManualModalOpened(false);
       setTxAciklama('');
       setTxCategoryId(null);
@@ -151,14 +147,15 @@ export function FinancePage() {
       alert('Geçerli bir sayılan kasa tutarı giriniz.');
       return;
     }
-
     try {
       const res = await window.electronAPI.invoke('finance:closeCashSession', {
         userId: user.id,
         sayilanKurus,
       });
-
-      alert(`Kasa oturumu başarıyla kapatıldı. Fark: ${(res.fark_kurus / 100).toFixed(2)} ₺`);
+      const backupNote = res.backup_path
+        ? 'Günlük otomatik yedek alındı.'
+        : 'UYARI: Otomatik yedek alınamadı! Ayarlar > Yedekleme ekranından manuel yedek alınız.';
+      alert(`Kasa oturumu başarıyla kapatıldı. Fark: ${(res.fark_kurus / 100).toFixed(2)} ₺\n${backupNote}`);
       setCloseModalOpened(false);
       loadData();
     } catch (err: any) {
@@ -173,7 +170,6 @@ export function FinancePage() {
       alert('Kategori adı zorunludur.');
       return;
     }
-
     try {
       await window.electronAPI.invoke('finance:createCategory', {
         ad: catName.trim(),
@@ -186,7 +182,6 @@ export function FinancePage() {
       alert(err?.message || 'Kategori oluşturulurken hata oluştu.');
     }
   };
-
   const getTurBadge = (tur: string) => {
     switch (tur) {
       case 'income':
@@ -199,13 +194,12 @@ export function FinancePage() {
         return <Badge color="gray">{tur}</Badge>;
     }
   };
-
   const getYontemBadge = (yontem: string) => {
     switch (yontem) {
       case 'cash':
         return <Badge color="green" variant="outline">Nakit</Badge>;
       case 'card':
-        return <Badge color="blue" variant="outline">Kredi Kartı</Badge>;
+        return <Badge color="brand" variant="outline">Kredi Kartı</Badge>;
       case 'transfer':
         return <Badge color="violet" variant="outline">Havale / EFT</Badge>;
       default:
@@ -217,29 +211,22 @@ export function FinancePage() {
   const beklenenKurus = openSession ? openSession.beklenen_kurus : 0;
   const girilenSayilanKurus = Math.round(Number(sayilanTL || 0) * 100);
   const hesaplananFarkKurus = girilenSayilanKurus - beklenenKurus;
-
   return (
     <Stack gap="lg">
       {/* Başlık ve Butonlar */}
-      <Group justify="space-between" align="center">
-        <div>
-          <Title order={2} c="white">Finans & Kasa Defteri</Title>
-          <Text size="sm" c="dimmed">
-            Gelir, gider ve iade hareketleri, net kâr hesaplaması ve gün sonu kasa kapanışı (A1, FR-29–34)
-          </Text>
-        </div>
+      <Group justify="space-between" align="flex-end">
+        <PageHeader title="Finans & Kasa Defteri" description="Gelir, gider ve iade hareketleri, net kâr hesaplaması ve gün sonu kasa kapanışı" />
 
         <Group gap="xs">
           <Tooltip label="Yenile">
-            <ActionIcon variant="light" color="blue" size="lg" onClick={loadData} loading={loading}>
+            <ActionIcon variant="default" size={36} onClick={loadData} loading={loading} aria-label="Yenile">
               <IconRefresh size={18} />
             </ActionIcon>
           </Tooltip>
 
           {openSession ? (
             <Button
-              color="red"
-              variant="light"
+              variant="default"
               leftSection={<IconLock size={16} />}
               onClick={() => setCloseModalOpened(true)}
             >
@@ -252,9 +239,6 @@ export function FinancePage() {
           )}
 
           <Button
-            color="teal"
-            variant="gradient"
-            gradient={{ from: 'teal.6', to: 'cyan.6' }}
             leftSection={<IconPlus size={16} />}
             onClick={() => setManualModalOpened(true)}
           >
@@ -265,70 +249,26 @@ export function FinancePage() {
 
       {/* Finansal KPI Kartları (FR-33, FR-35, A1 Formülü: Net Kâr = Gelir - İade - Gider) */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 5 }} spacing="md">
-        <Card p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Toplam Gelir</Text>
-            <ThemeIcon size={28} radius="md" color="teal" variant="light">
-              <IconArrowUpRight size={16} />
-            </ThemeIcon>
-          </Group>
-          <Text size="xl" fw={800} c="teal" mt={4}>
-            {(totals.totalIncome / 100).toFixed(2)} ₺
-          </Text>
-        </Card>
+        <StatCard label="Toplam Gelir" value={<>{(totals.totalIncome / 100).toFixed(2)} ₺</>} icon={<IconArrowUpRight size={17} />} color="teal" />
 
-        <Card p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Toplam İade</Text>
-            <ThemeIcon size={28} radius="md" color="orange" variant="light">
-              <IconRotate2 size={16} />
-            </ThemeIcon>
-          </Group>
-          <Text size="xl" fw={800} c="orange" mt={4}>
-            {(totals.totalRefund / 100).toFixed(2)} ₺
-          </Text>
-        </Card>
+        <StatCard label="Toplam İade" value={<>{(totals.totalRefund / 100).toFixed(2)} ₺</>} icon={<IconRotate2 size={17} />} color="orange" />
 
-        <Card p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Toplam Gider</Text>
-            <ThemeIcon size={28} radius="md" color="red" variant="light">
-              <IconArrowDownRight size={16} />
-            </ThemeIcon>
-          </Group>
-          <Text size="xl" fw={800} c="red" mt={4}>
-            {(totals.totalExpense / 100).toFixed(2)} ₺
-          </Text>
-        </Card>
+        <StatCard label="Toplam Gider" value={<>{(totals.totalExpense / 100).toFixed(2)} ₺</>} icon={<IconArrowDownRight size={17} />} color="red" />
 
-        <Card p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Net Ciro (Gelir - İade)</Text>
-            <ThemeIcon size={28} radius="md" color="blue" variant="light">
-              <IconCoins size={16} />
-            </ThemeIcon>
-          </Group>
-          <Text size="xl" fw={800} c="blue" mt={4}>
-            {(totals.netRevenue / 100).toFixed(2)} ₺
-          </Text>
-        </Card>
+        <StatCard label="Net Ciro (Gelir - İade)" value={<>{(totals.netRevenue / 100).toFixed(2)} ₺</>} icon={<IconCoins size={17} />} color="brand" />
 
-        <Card p="md" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid #334155' }}>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Net Kâr</Text>
-            <ThemeIcon size={28} radius="md" color={totals.netProfit >= 0 ? 'green' : 'red'} variant="light">
-              <IconCash size={16} />
-            </ThemeIcon>
-          </Group>
-          <Text size="xl" fw={800} c={totals.netProfit >= 0 ? 'green' : 'red'} mt={4}>
-            {(totals.netProfit / 100).toFixed(2)} ₺
-          </Text>
-        </Card>
+        <StatCard
+          label="Net Kâr"
+          value={`${(totals.netProfit / 100).toFixed(2)} ₺`}
+          icon={<IconCash size={17} />}
+          color={totals.netProfit >= 0 ? 'green' : 'red'}
+          valueColor={totals.netProfit < 0 ? 'red' : undefined}
+        />
       </SimpleGrid>
 
       {/* Kasa Durumu Bilgi Şeridi */}
       {openSession && (
-        <Paper p="sm" radius="md" style={{ backgroundColor: 'rgba(13, 148, 136, 0.1)', border: '1px solid rgba(13, 148, 136, 0.3)' }}>
+        <Paper p="sm" radius="md" style={{ backgroundColor: 'var(--mantine-color-teal-0)', borderColor: 'var(--mantine-color-teal-2)' }}>
           <Group justify="space-between">
             <Group gap="sm">
               <ThemeIcon color="teal" size={32} radius="md">
@@ -354,7 +294,7 @@ export function FinancePage() {
       )}
 
       {/* Sekmeler: Defter vs Kategoriler */}
-      <Tabs value={activeTab} onChange={(val) => setActiveTab(val || 'transactions')} color="blue" variant="outline">
+      <Tabs value={activeTab} onChange={(val) => setActiveTab(val || 'transactions')} color="brand" variant="outline">
         <Tabs.List>
           <Tabs.Tab value="transactions" leftSection={<IconCoins size={16} />}>
             İşlem Defteri ({transactions.length})
@@ -367,10 +307,10 @@ export function FinancePage() {
         <Tabs.Panel value="transactions" pt="md">
           <Stack gap="md">
             {/* Filtre Barı */}
-            <Paper p="sm" radius="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)', border: '1px solid #334155' }}>
+            <Paper p="sm" radius="md">
               <Group gap="sm" wrap="wrap">
                 <Group gap="xs">
-                  <IconFilter size={16} color="#94a3b8" />
+                  <IconFilter size={16} color="var(--mantine-color-dimmed)" />
                   <Text size="xs" fw={700} c="dimmed" tt="uppercase">Filtrele:</Text>
                 </Group>
 
@@ -435,7 +375,7 @@ export function FinancePage() {
             </Paper>
 
             {/* Hareketler Tablosu */}
-            <Paper radius="md" withBorder style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)', borderColor: '#334155', overflow: 'hidden' }}>
+            <Paper radius="md" withBorder style={{ overflow: 'hidden' }}>
               <Table striped highlightOnHover verticalSpacing="sm">
                 <Table.Thead>
                   <Table.Tr>
@@ -465,7 +405,7 @@ export function FinancePage() {
                           {getTurBadge(tx.tur)}
                         </Table.Td>
                         <Table.Td>
-                          <Text size="xs" fw={500} c="white">{tx.kategori_ad || '—'}</Text>
+                          <Text size="xs" fw={500}>{tx.kategori_ad || '—'}</Text>
                         </Table.Td>
                         <Table.Td>
                           {getYontemBadge(tx.yontem)}
@@ -503,7 +443,7 @@ export function FinancePage() {
               <Button
                 size="xs"
                 variant="light"
-                color="blue"
+                color="brand"
                 leftSection={<IconPlus size={14} />}
                 onClick={() => setNewCatModalOpened(true)}
               >
@@ -511,7 +451,7 @@ export function FinancePage() {
               </Button>
             </Group>
 
-            <Paper radius="md" withBorder style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)', borderColor: '#334155' }}>
+            <Paper radius="md" withBorder>
               <Table striped highlightOnHover verticalSpacing="sm">
                 <Table.Thead>
                   <Table.Tr>
@@ -525,7 +465,7 @@ export function FinancePage() {
                   {categories.map((cat) => (
                     <Table.Tr key={cat.id}>
                       <Table.Td><Text size="xs" c="dimmed">#{cat.id}</Text></Table.Td>
-                      <Table.Td><Text size="sm" fw={600} c="white">{cat.ad}</Text></Table.Td>
+                      <Table.Td><Text size="sm" fw={600}>{cat.ad}</Text></Table.Td>
                       <Table.Td>
                         <Badge size="xs" color={cat.tur === 'income' ? 'teal' : 'red'}>
                           {cat.tur === 'income' ? 'Gelir' : 'Gider'}
@@ -533,7 +473,7 @@ export function FinancePage() {
                       </Table.Td>
                       <Table.Td>
                         {cat.varsayilan ? (
-                          <Badge size="xs" color="blue" variant="dot">Sistem Varsayılanı</Badge>
+                          <Badge size="xs" color="brand" variant="dot">Sistem Varsayılanı</Badge>
                         ) : (
                           <Text size="xs" c="dimmed">Özel</Text>
                         )}
@@ -553,7 +493,6 @@ export function FinancePage() {
         onClose={() => setManualModalOpened(false)}
         title={<Text fw={700} size="lg">Manuel İşlem Girişi</Text>}
         centered
-        styles={{ content: { backgroundColor: '#0f172a', border: '1px solid #334155' } }}
       >
         <Stack gap="md">
           <Select
@@ -634,17 +573,16 @@ export function FinancePage() {
         onClose={() => setCloseModalOpened(false)}
         title={<Text fw={700} size="lg">Gün Sonu Kasa Kapanışı</Text>}
         centered
-        styles={{ content: { backgroundColor: '#0f172a', border: '1px solid #334155' } }}
       >
         <Stack gap="md">
-          <Alert color="blue" icon={<IconCash size={16} />}>
-            Kasada fiziki olarak bulunan parayı sayıp giriniz. Sistem beklenen nakit kasa ile karşılaştırıp farkı kaydedecektir (A1).
+          <Alert color="brand" icon={<IconCash size={16} />}>
+            Kasada fiziki olarak bulunan parayı sayıp giriniz. Sistem beklenen nakit kasa ile karşılaştırıp farkı kaydedecektir.
           </Alert>
 
-          <Paper p="sm" radius="md" style={{ backgroundColor: 'rgba(30, 41, 59, 0.7)' }}>
+          <Paper p="sm" radius="md">
             <Group justify="space-between">
               <Text size="sm" c="dimmed">Sistemde Beklenen Nakit Kasa:</Text>
-              <Text size="lg" fw={800} c="white">
+              <Text size="lg" fw={800}>
                 {(beklenenKurus / 100).toFixed(2)} ₺
               </Text>
             </Group>
@@ -666,16 +604,16 @@ export function FinancePage() {
             radius="md"
             style={{
               backgroundColor: hesaplananFarkKurus === 0
-                ? 'rgba(16, 185, 129, 0.1)'
+                ? 'var(--mantine-color-green-0)'
                 : hesaplananFarkKurus < 0
-                ? 'rgba(239, 68, 68, 0.1)'
-                : 'rgba(59, 130, 246, 0.1)',
+                ? 'var(--mantine-color-red-0)'
+                : 'var(--mantine-color-brand-0)',
               border: `1px solid ${
                 hesaplananFarkKurus === 0
-                  ? 'rgba(16, 185, 129, 0.4)'
+                  ? 'var(--mantine-color-green-3)'
                   : hesaplananFarkKurus < 0
-                  ? 'rgba(239, 68, 68, 0.4)'
-                  : 'rgba(59, 130, 246, 0.4)'
+                  ? 'var(--mantine-color-red-3)'
+                  : 'var(--mantine-color-brand-3)'
               }`,
             }}
           >
@@ -697,7 +635,7 @@ export function FinancePage() {
             <Button variant="subtle" color="gray" onClick={() => setCloseModalOpened(false)}>
               Vazgeç
             </Button>
-            <Button color="red" leftSection={<IconCheck size={16} />} onClick={handleCloseSession}>
+            <Button leftSection={<IconCheck size={16} />} onClick={handleCloseSession}>
               Kasayı Kapat ve Kaydet
             </Button>
           </Group>
@@ -710,7 +648,6 @@ export function FinancePage() {
         onClose={() => setNewCatModalOpened(false)}
         title={<Text fw={700} size="lg">Yeni Kategori Ekle</Text>}
         centered
-        styles={{ content: { backgroundColor: '#0f172a', border: '1px solid #334155' } }}
       >
         <Stack gap="md">
           <TextInput
@@ -734,7 +671,7 @@ export function FinancePage() {
             <Button variant="subtle" color="gray" onClick={() => setNewCatModalOpened(false)}>
               İptal
             </Button>
-            <Button color="blue" onClick={handleCreateCategory}>
+            <Button color="brand" onClick={handleCreateCategory}>
               Oluştur
             </Button>
           </Group>

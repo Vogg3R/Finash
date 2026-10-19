@@ -1,40 +1,66 @@
 @import '@mantine/core/styles.css';
 
+/* Uygulama genel yüzey renkleri: sayfalar bu değişkenleri kullanır, elle renk yazılmaz */
 :root {
-  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --app-bg: #f5f6f8;
+  --app-surface: #ffffff;
+  --app-border: #e7e9ee;
+  --app-sidebar-bg: #ffffff;
+  --app-text-strong: #111827;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-family);
-  background-color: #0b0f19;
-  color: #f1f5f9;
+  background-color: var(--app-bg);
+  color: var(--app-text-strong);
   overflow-x: hidden;
   user-select: none;
+  -webkit-font-smoothing: antialiased;
+  /* Tutarlar ve sayaçlar alt alta hizalı dursun */
+  font-variant-numeric: tabular-nums;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
   letter-spacing: -0.02em;
 }
 
-/* Custom scrollbar */
+/* Sol menü: aktif öğe açık zemin + vurgu rengi metin, pasif öğeler gri */
+.mantine-NavLink-root {
+  color: #4b5563;
+}
+
+.mantine-NavLink-root:hover {
+  background-color: #f1f3f5;
+}
+
+.mantine-NavLink-root[data-active] {
+  background-color: var(--mantine-color-brand-0);
+  color: var(--mantine-color-brand-7);
+}
+
+.mantine-NavLink-root[data-active]:hover {
+  background-color: var(--mantine-color-brand-1);
+}
+
+input, textarea {
+  user-select: text;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8);
+  background: #d4d8df;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 1);
+  background: #b5bac4;
 }

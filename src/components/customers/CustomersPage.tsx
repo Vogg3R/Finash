@@ -29,9 +29,9 @@ import {
   IconCheck,
   IconEdit,
 } from '@tabler/icons-react';
+import { PageHeader } from '../ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { normalizePlate } from '../../../electron/utils/plateNormalizer';
-
 export interface CustomerItem {
   id: number;
   ad: string;
@@ -40,12 +40,10 @@ export interface CustomerItem {
   veresiye_bakiye_kurus: number;
   created_at: string;
 }
-
 export interface VehicleTypeOption {
   value: string;
   label: string;
 }
-
 export const CustomersPage: React.FC = () => {
   const { user } = useAuth();
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
@@ -74,7 +72,6 @@ export const CustomersPage: React.FC = () => {
 
   // Canlı plaka normalizasyonu önizlemesi
   const platePreview = normalizePlate(plateSearch);
-
   const fetchCustomers = async (query = '') => {
     setLoading(true);
     try {
@@ -88,7 +85,6 @@ export const CustomersPage: React.FC = () => {
       setLoading(false);
     }
   };
-
   const fetchVehicleTypes = async () => {
     try {
       if (window.electronAPI) {
@@ -102,12 +98,10 @@ export const CustomersPage: React.FC = () => {
       console.error(err);
     }
   };
-
   useEffect(() => {
     fetchCustomers();
     fetchVehicleTypes();
   }, []);
-
   const handleSearchPlate = async () => {
     if (!plateSearch.trim()) return;
     try {
@@ -119,7 +113,6 @@ export const CustomersPage: React.FC = () => {
       console.error(err);
     }
   };
-
   const handleSaveCustomer = async () => {
     if (!custName.trim() || !user) return;
     try {
@@ -149,17 +142,14 @@ export const CustomersPage: React.FC = () => {
       alert(err.message);
     }
   };
-
   const handleSaveVehicle = async () => {
     if (!vehPlate.trim()) return;
     setVehError(null);
-
     const norm = normalizePlate(vehPlate);
     if (!norm.isValid) {
       setVehError(norm.error || 'Geçersiz plaka formatı.');
       return;
     }
-
     try {
       await window.electronAPI.invoke('vehicles:register', {
         rawPlate: vehPlate,
@@ -169,7 +159,6 @@ export const CustomersPage: React.FC = () => {
         vehicle_type_id: Number(vehTypeId),
         customer_id: vehCustomerId ? Number(vehCustomerId) : null,
       });
-
       setVehicleModalOpened(false);
       setVehPlate('');
       setVehBrand('');
@@ -180,30 +169,21 @@ export const CustomersPage: React.FC = () => {
       setVehError(err.message);
     }
   };
-
   return (
     <Stack gap="lg">
-      <Group justify="space-between" align="center">
-        <div>
-          <Title order={2} c="white">
-            Müşteri ve Araç Yönetimi
-          </Title>
-          <Text size="sm" c="dimmed">
-            Plaka arama, müşteri kartları ve araç kayıtları (FR-10, FR-11, FR-12).
-          </Text>
-        </div>
+      <Group justify="space-between" align="flex-end">
+        <PageHeader title="Müşteri ve Araç Yönetimi" description="Plaka arama, müşteri kartları ve araç kayıtları." />
 
         <Group>
           <Button
-            variant="light"
-            color="cyan"
+            variant="default"
             leftSection={<IconCar size={16} />}
             onClick={() => setVehicleModalOpened(true)}
           >
             Yeni Araç Kaydet
           </Button>
           <Button
-            color="blue"
+            color="brand"
             leftSection={<IconPlus size={16} />}
             onClick={() => {
               setEditingCustomer(null);
@@ -222,14 +202,10 @@ export const CustomersPage: React.FC = () => {
       <Paper
         p="md"
         radius="lg"
-        style={{
-          backgroundColor: 'rgba(15, 23, 42, 0.75)',
-          border: '1px solid rgba(59, 130, 246, 0.3)',
-        }}
       >
         <Stack gap="xs">
-          <Text size="sm" fw={700} c="white">
-            Hızlı Plaka Sorgulama (P4 Kuralı)
+          <Text size="sm" fw={700}>
+            Hızlı Plaka Sorgulama
           </Text>
           <Group>
             <TextInput
@@ -246,7 +222,7 @@ export const CustomersPage: React.FC = () => {
               size="md"
               leftSection={<IconCar size={18} />}
             />
-            <Button size="md" color="blue" onClick={handleSearchPlate}>
+            <Button size="md" color="brand" onClick={handleSearchPlate}>
               Sorgula
             </Button>
           </Group>
@@ -277,13 +253,13 @@ export const CustomersPage: React.FC = () => {
                   p="sm"
                   radius="md"
                   style={{
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    backgroundColor: 'var(--mantine-color-teal-0)',
+                    border: '1px solid var(--mantine-color-teal-2)',
                   }}
                 >
                   <Group justify="space-between">
                     <div>
-                      <Text fw={800} size="md" c="white">
+                      <Text fw={800} size="md">
                         {plateSearchResult.exactMatch.vehicle.plaka}
                       </Text>
                       <Text size="xs" c="dimmed">
@@ -315,13 +291,9 @@ export const CustomersPage: React.FC = () => {
       <Paper
         p="md"
         radius="lg"
-        style={{
-          backgroundColor: 'rgba(15, 23, 42, 0.75)',
-          border: '1px solid rgba(51, 65, 85, 0.4)',
-        }}
       >
         <Group justify="space-between" mb="md">
-          <Text fw={700} size="md" c="white">
+          <Text fw={700} size="md">
             Kayıtlı Müşteriler ({customers.length})
           </Text>
           <TextInput
@@ -350,14 +322,14 @@ export const CustomersPage: React.FC = () => {
           <Table.Tbody>
             {customers.length === 0 ? (
               <Table.Tr>
-                <Table.Td colSpan={5} style={{ textAlign: 'center', color: '#64748b' }}>
+                <Table.Td colSpan={5} style={{ textAlign: 'center', color: 'var(--mantine-color-dimmed)' }}>
                   {loading ? 'Yükleniyor...' : 'Henüz müşteri bulunmuyor.'}
                 </Table.Td>
               </Table.Tr>
             ) : (
               customers.map((c) => (
                 <Table.Tr key={c.id}>
-                  <Table.Td fw={700} c="white">
+                  <Table.Td fw={700}>
                     {c.ad}
                   </Table.Td>
                   <Table.Td>{c.telefon || '-'}</Table.Td>
@@ -366,7 +338,7 @@ export const CustomersPage: React.FC = () => {
                   <Table.Td style={{ textAlign: 'right' }}>
                     <ActionIcon
                       variant="subtle"
-                      color="blue"
+                      color="brand"
                       onClick={() => {
                         setEditingCustomer(c);
                         setCustName(c.ad);
@@ -417,7 +389,7 @@ export const CustomersPage: React.FC = () => {
             <Button variant="subtle" color="gray" onClick={() => setCustomerModalOpened(false)}>
               İptal
             </Button>
-            <Button color="blue" onClick={handleSaveCustomer}>
+            <Button color="brand" onClick={handleSaveCustomer}>
               {editingCustomer ? 'Güncelle' : 'Kaydet'}
             </Button>
           </Group>
@@ -491,7 +463,7 @@ export const CustomersPage: React.FC = () => {
             <Button variant="subtle" color="gray" onClick={() => setVehicleModalOpened(false)}>
               İptal
             </Button>
-            <Button color="cyan" onClick={handleSaveVehicle}>
+            <Button onClick={handleSaveVehicle}>
               Aracı Kaydet
             </Button>
           </Group>
